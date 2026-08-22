@@ -1,0 +1,436 @@
+// MK Finance — New Car Website + Dealer + Finance CRM
+// Prisma schema — matches CLAUDE.md section 3 & 19 database design
+// Local dev uses SQLite (no signup needed). Switch provider to "postgresql"
+// and set DATABASE_URL to your Neon connection string for production.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== IDENTITY & ACCESS ====================
+
+enum UserRole {
+  SUPER_ADMIN
+  SALES_ADMIN
+  FINANCE_ADMIN
+  DEALER_MANAGER
+  DEALER_EXECUTIVE
+  FINANCE_EXECUTIVE
+  CUSTOMER
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  mobile       String   @unique
+  email        String?
+  passwordHash String?
+  role         UserRole
+  status       String   @default("ACTIVE") // ACTIVE | INACTIVE
+
+  dealerId String?
+  dealer   Dealer? @relation(fields: [dealerId], references: [id])
+
+  bankId String?
+  bank   Bank?   @relation(fields: [bankId], references: [id])
+
+  dealerExecutiveOf   DealerExecutive?
+  dealerManagerOf     DealerManager?
+  financeExecutiveOf  FinanceExecutive?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  otpCodes         OtpCode[]
+  leadsAssignedAsDealerExec  Lead[] @relation("LeadDealerExecutive")
+  leadsAssignedAsFinanceExec Lead[] @relation("LeadFinanceExecutive")
+  followUps        FollowUp[]
+  activities       Activity[]
+  auditLogs        AuditLog[]
+  notifications    Notification[]
+  sentMessages     Message[] @relation("MessageSender")
+}
+
+// Mobile OTP — dev mode: code is returned in the API response / logged to
+// console instead of sent via SMS gateway. Wire up MSG91/Twilio here later.
+model OtpCode {
+  id        String   @id @default(cuid())
+  mobile    String
+  code      String
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  verified  Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+// ==================== CATALOGUE ====================
+
+model Brand {
+  id      String  @id @default(cuid())
+  name    String  @unique
+  logoUrl String?
+  status  String  @default("ACTIVE")
+
+  models Model[]
+  leads  Lead[]
+}
+
+model Model {
+  id      String @id @default(cuid())
+  brandId String
+  brand   Brand  @relation(fields: [brandId], references: [id])
+  name    String
+  status  String @default("ACTIVE")
+
+  variants Variant[]
+  leads    Lead[]
+}
+
+model Variant {
+  id               String  @id @default(cuid())
+  modelId          String
+  model            Model   @relation(fields: [modelId], references: [id])
+  name             String
+  fuelType         String
+  transmission     String
+  exShowroomPrice  Float
+  featuresJson     String? // JSON string (SQLite has no native Json type)
+  specsJson        String?
+
+  vehicles Vehicle[]
+  leads    Lead[]
+}
+
+model Vehicle {
+  id              String  @id @default(cuid())
+  variantId       String
+  variant         Variant @relation(fields: [variantId], references: [id])
+  colourOptionsJson String?
+  imagesJson      String?
+  isActive        Boolean @default(true)
+}
+
+// ==================== CUSTOMER & LEAD ====================
+
+model Customer {
+  id         String   @id @default(cuid())
+  name       String
+  mobile     String   @unique
+  whatsapp   String?
+  city       String?
+  email      String?
+  otpVerified Boolean @default(false)
+  createdAt  DateTime @default(now())
+
+  leads Lead[]
+}
+
+model LostReason {
+  id    String @id @default(cuid())
+  label String @unique
+
+  leads Lead[]
+}
+
+model Lead {
+  id      String @id @default(cuid())
+  leadCode String @unique // format CAR-2026-000001
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  brandId   String?
+  brand     Brand?   @relation(fields: [brandId], references: [id])
+  modelId   String?
+  model     Model?   @relation(fields: [modelId], references: [id])
+  variantId String?
+  variant   Variant? @relation(fields: [variantId], references: [id])
+
+  dealerId String?
+  dealer   Dealer? @relation(fields: [dealerId], references: [id])
+
+  dealerExecutiveId String?
+  dealerExecutive   User?  @relation("LeadDealerExecutive", fields: [dealerExecutiveId], references: [id])
+
+  financeExecutiveId String?
+  financeExecutive   User?  @relation("LeadFinanceExecutive", fields: [financeExecutiveId], references: [id])
+
+  bankId String?
+  bank   Bank?  @relation(fields: [bankId], references: [id])
+
+  // Locked pipeline sequence (CLAUDE.md section 9)
+  salesStatus String @default("NEW")
+  // NEW, CONTACTED, QUALIFIED, INTERESTED, TEST_DRIVE, QUOTATION,
+  // NEGOTIATION, BOOKING, DELIVERY, CLOSED, HOLD, LOST
+
+  // Separate finance pipeline (CLAUDE.md section 11)
+  financeStatus String @default("NOT_REQUIRED")
+  // NOT_REQUIRED, PENDING, DOCUMENTS, LOGIN, VERIFICATION, BANK_QUERY,
+  // QUERY_RESOLVED, SANCTION, AGREEMENT, DISBURSEMENT, FINANCE_COMPLETED
+
+  source                String  @default("WEBSITE")
+  budget                Float?
+  financeRequired       Boolean @default(false)
+  expectedPurchaseDate  DateTime?
+  isHold                Boolean @default(false)
+  isLost                Boolean @default(false)
+  lostReasonId          String?
+  lostReason            LostReason? @relation(fields: [lostReasonId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assignments        Assignment[]
+  followUps          FollowUp[]
+  activities         Activity[]
+  quotations         Quotation[]
+  testDrives         TestDrive[]
+  documents          Document[]
+  financeCase        FinanceCase?
+  booking            Booking?
+  delivery           Delivery?
+  messages           Message[]
+}
+
+// ==================== DEALER STRUCTURE ====================
+
+model Dealer {
+  id      String @id @default(cuid())
+  name    String
+  brandId String?
+  address String?
+  city    String?
+  status  String @default("ACTIVE")
+
+  branches   DealerBranch[]
+  managers   DealerManager[]
+  executives DealerExecutive[]
+  users      User[]
+  leads      Lead[]
+}
+
+model DealerBranch {
+  id       String @id @default(cuid())
+  dealerId String
+  dealer   Dealer @relation(fields: [dealerId], references: [id])
+  name     String
+  address  String?
+  city     String?
+
+  executives DealerExecutive[]
+}
+
+model DealerManager {
+  id       String @id @default(cuid())
+  userId   String @unique
+  user     User   @relation(fields: [userId], references: [id])
+  dealerId String
+  dealer   Dealer @relation(fields: [dealerId], references: [id])
+}
+
+model DealerExecutive {
+  id       String  @id @default(cuid())
+  userId   String  @unique
+  user     User    @relation(fields: [userId], references: [id])
+  dealerId String
+  dealer   Dealer  @relation(fields: [dealerId], references: [id])
+  branchId String?
+  branch   DealerBranch? @relation(fields: [branchId], references: [id])
+}
+
+// ==================== BANK / NBFC STRUCTURE ====================
+
+model Bank {
+  id     String @id @default(cuid())
+  name   String
+  status String @default("ACTIVE")
+
+  branches   BankBranch[]
+  executives FinanceExecutive[]
+  users      User[]
+  leads      Lead[]
+  financeCases FinanceCase[]
+}
+
+model BankBranch {
+  id                 String @id @default(cuid())
+  bankId             String
+  bank               Bank   @relation(fields: [bankId], references: [id])
+  name               String
+  city               String?
+  serviceArea        String?
+  vehicleEligibilityJson String?
+
+  executives FinanceExecutive[]
+}
+
+model FinanceExecutive {
+  id       String  @id @default(cuid())
+  userId   String  @unique
+  user     User    @relation(fields: [userId], references: [id])
+  bankId   String
+  bank     Bank    @relation(fields: [bankId], references: [id])
+  branchId String?
+  branch   BankBranch? @relation(fields: [branchId], references: [id])
+}
+
+// ==================== WORKFLOW ENTITIES ====================
+
+model Assignment {
+  id                 String   @id @default(cuid())
+  leadId             String
+  lead               Lead     @relation(fields: [leadId], references: [id])
+  dealerExecutiveId  String?
+  financeExecutiveId String?
+  assignedBy         String
+  assignedAt         DateTime @default(now())
+}
+
+model FollowUp {
+  id             String   @id @default(cuid())
+  leadId         String
+  lead           Lead     @relation(fields: [leadId], references: [id])
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  type           String   // Call, WhatsApp, Meeting, Test Drive, Dealer Visit
+  result         String   // Interested, Very Interested, Price Issue, Finance Issue, Waiting, Not Interested, Call Later
+  notes          String?
+  nextFollowUpAt DateTime
+  createdAt      DateTime @default(now())
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  metaJson  String?
+  createdAt DateTime @default(now())
+}
+
+model Quotation {
+  id            String   @id @default(cuid())
+  leadId        String
+  lead          Lead     @relation(fields: [leadId], references: [id])
+  price         Float
+  onRoadPrice   Float
+  exchangeValue Float?
+  validTill     DateTime
+  createdAt     DateTime @default(now())
+}
+
+model TestDrive {
+  id          String   @id @default(cuid())
+  leadId      String
+  lead        Lead     @relation(fields: [leadId], references: [id])
+  scheduledAt DateTime
+  status      String   @default("SCHEDULED") // SCHEDULED, COMPLETED, CANCELLED
+  feedback    String?
+}
+
+model Document {
+  id               String    @id @default(cuid())
+  leadId           String
+  lead             Lead      @relation(fields: [leadId], references: [id])
+  type             String    // Aadhaar, PAN, Address Proof, Income Proof, Bank Statement, ITR, GST, etc.
+  fileUrl          String
+  status           String    @default("PENDING") // PENDING, UPLOADED, VERIFIED, REJECTED
+  rejectionReason  String?
+  version          Int       @default(1)
+  uploadedBy       String
+  verifiedBy       String?
+  createdAt        DateTime  @default(now())
+}
+
+model FinanceCase {
+  id                  String   @id @default(cuid())
+  leadId              String   @unique
+  lead                Lead     @relation(fields: [leadId], references: [id])
+  bankId              String
+  bank                Bank     @relation(fields: [bankId], references: [id])
+  financeExecutiveId  String
+  loanAmount          Float
+  downPayment         Float
+  tenureMonths        Int
+  roi                 Float
+  emi                 Float
+  processingFee       Float?
+  otherChargesJson    String?
+  stage               String   @default("PENDING")
+  createdAt           DateTime @default(now())
+
+  statusHistory FinanceStatusHistory[]
+}
+
+model FinanceStatusHistory {
+  id            String      @id @default(cuid())
+  financeCaseId String
+  financeCase   FinanceCase @relation(fields: [financeCaseId], references: [id])
+  fromStage     String
+  toStage       String
+  changedBy     String
+  notes         String?
+  createdAt     DateTime    @default(now())
+}
+
+model Booking {
+  id            String   @id @default(cuid())
+  leadId        String   @unique
+  lead          Lead     @relation(fields: [leadId], references: [id])
+  bookingAmount Float
+  bookedAt      DateTime @default(now())
+  bookedBy      String
+}
+
+model Delivery {
+  id           String    @id @default(cuid())
+  leadId       String    @unique
+  lead         Lead      @relation(fields: [leadId], references: [id])
+  scheduledAt  DateTime
+  deliveredAt  DateTime?
+  status       String    @default("SCHEDULED") // SCHEDULED, DELIVERED, DELAYED
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String
+  title     String
+  body      String
+  channel   String   @default("IN_APP") // IN_APP, EMAIL, SMS, WHATSAPP
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Message {
+  id              String   @id @default(cuid())
+  leadId          String
+  lead            Lead     @relation(fields: [leadId], references: [id])
+  senderUserId    String
+  sender          User     @relation("MessageSender", fields: [senderUserId], references: [id])
+  recipientUserId String?
+  body            String
+  customerVisible Boolean  @default(false)
+  createdAt       DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  entity    String
+  entityId  String
+  action    String
+  beforeJson String?
+  afterJson  String?
+  createdAt DateTime @default(now())
+}
