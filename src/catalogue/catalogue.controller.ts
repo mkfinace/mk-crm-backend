@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CatalogueService } from './catalogue.service';
+import { CreateBrandDto, CreateModelDto, CreateVariantDto } from './dto/catalogue.dto';
 
 @ApiTags('catalogue')
 @Controller('catalogue')
@@ -16,8 +17,9 @@ export class CatalogueController {
   listBrands() {
     return this.catalogueService.listBrands();
   }
+
   @Post('brands')
-  createBrand(@Body() data: { name: string; logoUrl?: string }) {
+  createBrand(@Body() data: CreateBrandDto) {
     return this.catalogueService.createBrand(data);
   }
 
@@ -25,8 +27,9 @@ export class CatalogueController {
   listModels(@Query('brandId') brandId?: string) {
     return this.catalogueService.listModels(brandId);
   }
+
   @Post('models')
-  createModel(@Body() data: { brandId: string; name: string }) {
+  createModel(@Body() data: CreateModelDto) {
     return this.catalogueService.createModel(data);
   }
 
@@ -34,8 +37,9 @@ export class CatalogueController {
   listVariants(@Query('modelId') modelId?: string) {
     return this.catalogueService.listVariants(modelId);
   }
+
   @Post('variants')
-  createVariant(@Body() data: any) {
+  createVariant(@Body() data: CreateVariantDto) {
     return this.catalogueService.createVariant(data);
   }
 }
