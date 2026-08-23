@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CatalogueService } from './catalogue.service';
 import { CreateBrandDto, CreateModelDto, CreateVariantDto } from './catalogue.dto';
@@ -23,6 +23,11 @@ export class CatalogueController {
     return this.catalogueService.createBrand(data);
   }
 
+  @Delete('brands/:id')
+  deleteBrand(@Param('id') id: string) {
+    return this.catalogueService.deleteBrand(id);
+  }
+
   @Get('models')
   listModels(@Query('brandId') brandId?: string) {
     return this.catalogueService.listModels(brandId);
@@ -33,6 +38,11 @@ export class CatalogueController {
     return this.catalogueService.createModel(data);
   }
 
+  @Delete('models/:id')
+  deleteModel(@Param('id') id: string) {
+    return this.catalogueService.deleteModel(id);
+  }
+
   @Get('variants')
   listVariants(@Query('modelId') modelId?: string) {
     return this.catalogueService.listVariants(modelId);
@@ -41,5 +51,10 @@ export class CatalogueController {
   @Post('variants')
   createVariant(@Body() data: CreateVariantDto) {
     return this.catalogueService.createVariant(data);
+  }
+
+  @Delete('variants/:id')
+  deleteVariant(@Param('id') id: string) {
+    return this.catalogueService.deleteVariant(id);
   }
 }
