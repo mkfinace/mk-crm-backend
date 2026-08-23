@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateUserDto {
@@ -22,7 +22,7 @@ export class CreateUserDto {
   @IsNotEmpty()
   password: string;
 
-  @ApiProperty({ example: 'ADMIN', description: 'Matches UserRole enum e.g. ADMIN, DEALER_EXECUTIVE, FINANCE_EXECUTIVE' })
+  @ApiProperty({ example: 'SUPER_ADMIN', description: 'SUPER_ADMIN, SALES_ADMIN, FINANCE_ADMIN, DEALER_MANAGER, DEALER_EXECUTIVE, FINANCE_EXECUTIVE, CUSTOMER' })
   @IsString()
   @IsNotEmpty()
   role: string;
@@ -37,6 +37,8 @@ export class CreateUserDto {
   @IsOptional()
   bankId?: string;
 }
+
+export class UpdateUserDto extends PartialType(CreateUserDto) {}
 
 export class LoginDto {
   @ApiProperty({ example: '9824742356' })
