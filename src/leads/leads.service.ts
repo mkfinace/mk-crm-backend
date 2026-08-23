@@ -40,7 +40,6 @@ export class LeadsService {
     expectedPurchaseDate?: string;
     source?: string;
   }) {
-    // Find or create the customer by mobile number
     let customer = await this.prisma.customer.findUnique({ where: { mobile: data.customerMobile } });
     if (!customer) {
       customer = await this.prisma.customer.create({
@@ -92,6 +91,72 @@ export class LeadsService {
     });
     if (!lead) throw new NotFoundException('Lead not found.');
     return lead;
+  }
+
+  async updateLead(id: string, data: {
+    customerName?: string;
+    customerMobile?: string;
+    city?: string;
+    brandId?: string;
+    modelId?: string;
+    variantId?: string;
+    budget?: number;
+    financeRequired?: boolean;
+    expectedPurchaseDate?: string;
+    source?: string;
+  }) {
+    const lead = await this.prisma.lead.findUnique({ where: { id } });
+    if (!lead) throw new NotFoundException('Lead not found.');
+
+    if (data.customerName || data.customerMobile || data.city) {
+      await this.prisma.customer.update({
+        where: { id: lead.customerId },
+        data: {
+          ...(data.customerName ? { name: data.customerName } : {}),
+          ...(data.customerMobile ? { mobile: data.customerMobile } : {}),
+          ...(data.city ? { city: data.city } : {}),
+        },
+      });
+    }
+
+    return this.prisma.lead.update({
+      where: { id },
+      data: {
+        brandId: data.brandId,
+        modelId: data.modelId,
+        variantId: data.variantId,
+        budget: data.budget,
+        financeRequired: data.financeRequired,
+        expectedPurchaseDate: data.expectedPurchaseDate ? new Date(data.expectedPurchaseDate) : undefined,
+        source: data.source,
+      },
+      include: { customer: true, brand: true, model: true, variant: true },
+    });
+  }
+
+  async deleteLead(id: string) {
+    const lead = await this.prisma.lead.findUnique({ where: { id } });
+    if (!lead) throw new NotFoundException('Lead not found.');
+    try {
+      // Clean up dependent records first (they don't cascade automatically)
+      await this.prisma.activity.deleteMany({ where: { leadId: id } });
+      await this.prisma.followUp.deleteMany({ where: { leadId: id } });
+      await this.prisma.assignment.deleteMany({ where: { leadId: id } });
+      await this.prisma.quotation.deleteMany({ where: { leadId: id } });
+      await this.prisma.testDrive.deleteMany({ where: { leadId: id } });
+      await this.prisma.document.deleteMany({ where: { leadId: id } });
+      await this.prisma.message.deleteMany({ where: { leadId: id } });
+      await this.prisma.booking.deleteMany({ where: { leadId: id } });
+      await this.prisma.delivery.deleteMany({ where: { leadId: id } });
+      const financeCase = await this.prisma.financeCase.findUnique({ where: { leadId: id } });
+      if (financeCase) {
+        await this.prisma.financeStatusHistory.deleteMany({ where: { financeCaseId: financeCase.id } });
+        await this.prisma.financeCase.delete({ where: { id: financeCase.id } });
+      }
+      return await this.prisma.lead.delete({ where: { id } });
+    } catch (e) {
+      throw new BadRequestException('Could not delete this lead due to linked records.');
+    }
   }
 
   async assignLead(id: string, data: { dealerExecutiveId?: string; financeExecutiveId?: string; assignedBy: string }) {
@@ -154,7 +219,6 @@ export class LeadsService {
   }
 
   private async logActivity(leadId: string, userId: string, action: string, meta?: any) {
-    // Activity/audit trail is append-only — never silently deletable (CLAUDE.md section 13)
     return this.prisma.activity.create({
       data: { leadId, userId, action, metaJson: meta ? JSON.stringify(meta) : undefined },
     });
