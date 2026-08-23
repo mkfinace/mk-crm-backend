@@ -11,6 +11,7 @@ import { BanksModule } from './banks/banks.module';
 import { QuotationsModule } from './quotations/quotations.module';
 import { TestDrivesModule } from './testdrives/testdrives.module';
 import { DocumentsModule } from './documents/documents.module';
+import { FinanceCasesModule } from './financecases/financecases.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { DocumentsModule } from './documents/documents.module';
     QuotationsModule,
     TestDrivesModule,
     DocumentsModule,
+    FinanceCasesModule,
   ],
   controllers: [AppController],
 })
