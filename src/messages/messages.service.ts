@@ -22,12 +22,14 @@ export class MessagesService {
         body: data.body,
         customerVisible: data.customerVisible || false,
       },
+      include: { sender: true },
     });
   }
 
   listMessages(leadId: string) {
     return this.prisma.message.findMany({
       where: { leadId },
+      include: { sender: true },
       orderBy: { createdAt: 'asc' },
     });
   }
