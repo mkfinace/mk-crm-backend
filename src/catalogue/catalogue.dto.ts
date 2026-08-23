@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsNotEmpty } from 'class-validator';
 
 export class CreateBrandDto {
   @ApiProperty({ example: 'Maruti Suzuki' })
@@ -14,7 +14,7 @@ export class CreateBrandDto {
 }
 
 export class CreateModelDto {
-  @ApiProperty({ example: 'brand-id-123' })
+  @ApiProperty({ example: 'clx1234567890', description: 'ID of the brand this model belongs to' })
   @IsString()
   @IsNotEmpty()
   brandId: string;
@@ -26,12 +26,12 @@ export class CreateModelDto {
 }
 
 export class CreateVariantDto {
-  @ApiProperty({ example: 'model-id-123' })
+  @ApiProperty({ example: 'clx1234567890', description: 'ID of the model this variant belongs to' })
   @IsString()
   @IsNotEmpty()
   modelId: string;
 
-  @ApiProperty({ example: 'VXI' })
+  @ApiProperty({ example: 'LXi' })
   @IsString()
   @IsNotEmpty()
   name: string;
@@ -46,16 +46,16 @@ export class CreateVariantDto {
   @IsNotEmpty()
   transmission: string;
 
-  @ApiProperty({ example: 650000 })
+  @ApiProperty({ example: 649000 })
   @IsNumber()
   exShowroomPrice: number;
 
-  @ApiPropertyOptional({ example: '{"airbags": 2, "abs": true}' })
+  @ApiPropertyOptional({ example: '["ABS","6 Airbags"]' })
   @IsString()
   @IsOptional()
   featuresJson?: string;
 
-  @ApiPropertyOptional({ example: '{"engine": "1197cc"}' })
+  @ApiPropertyOptional({ example: '{"engine":"1197cc"}' })
   @IsString()
   @IsOptional()
   specsJson?: string;
