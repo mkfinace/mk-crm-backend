@@ -201,12 +201,14 @@ model Lead {
 // ==================== DEALER STRUCTURE ====================
 
 model Dealer {
-  id      String @id @default(cuid())
+  id      String  @id @default(cuid())
   name    String
   brandId String?
   address String?
   city    String?
-  status  String @default("ACTIVE")
+  phone   String?
+  email   String?
+  status  String  @default("ACTIVE")
 
   branches   DealerBranch[]
   managers   DealerManager[]
@@ -247,9 +249,11 @@ model DealerExecutive {
 // ==================== BANK / NBFC STRUCTURE ====================
 
 model Bank {
-  id     String @id @default(cuid())
+  id     String  @id @default(cuid())
   name   String
-  status String @default("ACTIVE")
+  phone  String?
+  email  String?
+  status String  @default("ACTIVE")
 
   branches   BankBranch[]
   executives FinanceExecutive[]
