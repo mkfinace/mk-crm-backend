@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export class BanksService {
   constructor(private prisma: PrismaService) {}
 
-  createBank(data: { name: string }) {
+  createBank(data: { name: string; phone?: string; email?: string }) {
     return this.prisma.bank.create({ data });
   }
 
@@ -22,7 +22,7 @@ export class BanksService {
     return bank;
   }
 
-  async updateBank(id: string, data: { name?: string }) {
+  async updateBank(id: string, data: { name?: string; phone?: string; email?: string }) {
     const bank = await this.prisma.bank.findUnique({ where: { id } });
     if (!bank) throw new NotFoundException('Bank not found.');
     return this.prisma.bank.update({ where: { id }, data });
