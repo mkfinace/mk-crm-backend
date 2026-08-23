@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditLogsService } from '../auditlogs/auditlogs.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 export const SALES_PIPELINE = [
   'NEW', 'CONTACTED', 'QUALIFIED', 'INTERESTED', 'TEST_DRIVE', 'QUOTATION',
@@ -17,7 +18,11 @@ export const LOST_REASONS = [
 
 @Injectable()
 export class LeadsService {
-  constructor(private prisma: PrismaService, private auditLogs: AuditLogsService) {}
+  constructor(
+    private prisma: PrismaService,
+    private auditLogs: AuditLogsService,
+    private notifications: NotificationsService,
+  ) {}
 
   private async generateLeadCode(): Promise<string> {
     const year = new Date().getFullYear();
@@ -166,9 +171,8 @@ export class LeadsService {
     financeExecutiveId?: string;
     assignedBy: string;
   }) {
-    await this.getLead(id); // 404 if missing
+    const before = await this.getLead(id); // 404 if missing
 
-    // Validate the executive actually belongs to the selected dealer/bank.
     if (data.dealerExecutiveId && data.dealerId) {
       const exec = await this.prisma.dealerExecutive.findUnique({ where: { userId: data.dealerExecutiveId } });
       if (!exec || exec.dealerId !== data.dealerId) {
@@ -208,6 +212,25 @@ export class LeadsService {
       dealerId: data.dealerId, dealerExecutiveId: data.dealerExecutiveId,
       bankId: data.bankId, financeExecutiveId: data.financeExecutiveId,
     });
+
+    // Notify the newly assigned executive(s) — only when the assignment actually changed.
+    if (data.dealerExecutiveId && data.dealerExecutiveId !== before.dealerExecutiveId) {
+      await this.notifications.notify(
+        data.dealerExecutiveId,
+        'LEAD_ASSIGNED',
+        'New lead assigned to you',
+        `${lead.leadCode} — ${before.customer?.name || 'A customer'} is interested in ${before.brand?.name || ''} ${before.model?.name || ''}.`.trim(),
+      );
+    }
+    if (data.financeExecutiveId && data.financeExecutiveId !== before.financeExecutiveId) {
+      await this.notifications.notify(
+        data.financeExecutiveId,
+        'LEAD_ASSIGNED',
+        'New finance lead assigned to you',
+        `${lead.leadCode} — ${before.customer?.name || 'A customer'} needs financing.`,
+      );
+    }
+
     return lead;
   }
 
