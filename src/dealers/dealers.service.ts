@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export class DealersService {
   constructor(private prisma: PrismaService) {}
 
-  createDealer(data: { name: string; brandId?: string; address?: string; city?: string }) {
+  createDealer(data: { name: string; brandId?: string; address?: string; city?: string; phone?: string; email?: string }) {
     return this.prisma.dealer.create({ data });
   }
 
@@ -29,7 +29,7 @@ export class DealersService {
     return dealer;
   }
 
-  async updateDealer(id: string, data: { name?: string; brandId?: string; address?: string; city?: string }) {
+  async updateDealer(id: string, data: { name?: string; brandId?: string; address?: string; city?: string; phone?: string; email?: string }) {
     const dealer = await this.prisma.dealer.findUnique({ where: { id } });
     if (!dealer) throw new NotFoundException('Dealer not found.');
     return this.prisma.dealer.update({ where: { id }, data });
