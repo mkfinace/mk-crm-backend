@@ -14,6 +14,9 @@ import { DocumentsModule } from './documents/documents.module';
 import { FinanceCasesModule } from './financecases/financecases.module';
 import { BookingsModule } from './bookings/bookings.module';
 import { DeliveriesModule } from './deliveries/deliveries.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { MessagesModule } from './messages/messages.module';
+import { AuditLogsModule } from './auditlogs/auditlogs.module';
 
 @Module({
   imports: [
@@ -31,6 +34,9 @@ import { DeliveriesModule } from './deliveries/deliveries.module';
     FinanceCasesModule,
     BookingsModule,
     DeliveriesModule,
+    NotificationsModule,
+    MessagesModule,
+    AuditLogsModule,
   ],
   controllers: [AppController],
 })
