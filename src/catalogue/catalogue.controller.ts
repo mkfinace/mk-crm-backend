@@ -1,60 +1,68 @@
-import { Body, Controller, Delete, Get, Param, Post, Query } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import { CatalogueService } from './catalogue.service';
-import { CreateBrandDto, CreateModelDto, CreateVariantDto } from './catalogue.dto';
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
-@ApiTags('catalogue')
-@Controller('catalogue')
-export class CatalogueController {
-  constructor(private catalogueService: CatalogueService) {}
+export class CreateBrandDto {
+  @ApiProperty({ example: 'Maruti Suzuki' })
+  @IsString()
+  @IsNotEmpty()
+  name: string;
 
-  @Get('full')
-  fullCatalogue() {
-    return this.catalogueService.fullCatalogue();
-  }
-
-  @Get('brands')
-  listBrands() {
-    return this.catalogueService.listBrands();
-  }
-
-  @Post('brands')
-  createBrand(@Body() data: CreateBrandDto) {
-    return this.catalogueService.createBrand(data);
-  }
-
-  @Delete('brands/:id')
-  deleteBrand(@Param('id') id: string) {
-    return this.catalogueService.deleteBrand(id);
-  }
-
-  @Get('models')
-  listModels(@Query('brandId') brandId?: string) {
-    return this.catalogueService.listModels(brandId);
-  }
-
-  @Post('models')
-  createModel(@Body() data: CreateModelDto) {
-    return this.catalogueService.createModel(data);
-  }
-
-  @Delete('models/:id')
-  deleteModel(@Param('id') id: string) {
-    return this.catalogueService.deleteModel(id);
-  }
-
-  @Get('variants')
-  listVariants(@Query('modelId') modelId?: string) {
-    return this.catalogueService.listVariants(modelId);
-  }
-
-  @Post('variants')
-  createVariant(@Body() data: CreateVariantDto) {
-    return this.catalogueService.createVariant(data);
-  }
-
-  @Delete('variants/:id')
-  deleteVariant(@Param('id') id: string) {
-    return this.catalogueService.deleteVariant(id);
-  }
+  @ApiPropertyOptional({ example: 'https://example.com/logo.png' })
+  @IsString()
+  @IsOptional()
+  logoUrl?: string;
 }
+
+export class UpdateBrandDto extends PartialType(CreateBrandDto) {}
+
+export class CreateModelDto {
+  @ApiProperty({ example: 'brand-id-123' })
+  @IsString()
+  @IsNotEmpty()
+  brandId: string;
+
+  @ApiProperty({ example: 'Swift' })
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+}
+
+export class UpdateModelDto extends PartialType(CreateModelDto) {}
+
+export class CreateVariantDto {
+  @ApiProperty({ example: 'model-id-123' })
+  @IsString()
+  @IsNotEmpty()
+  modelId: string;
+
+  @ApiProperty({ example: 'VXI' })
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
+  @ApiProperty({ example: 'Petrol' })
+  @IsString()
+  @IsNotEmpty()
+  fuelType: string;
+
+  @ApiProperty({ example: 'Manual' })
+  @IsString()
+  @IsNotEmpty()
+  transmission: string;
+
+  @ApiProperty({ example: 650000 })
+  @IsNumber()
+  exShowroomPrice: number;
+
+  @ApiPropertyOptional({ example: '{"airbags": 2, "abs": true}' })
+  @IsString()
+  @IsOptional()
+  featuresJson?: string;
+
+  @ApiPropertyOptional({ example: '{"engine": "1197cc"}' })
+  @IsString()
+  @IsOptional()
+  specsJson?: string;
+}
+
+export class UpdateVariantDto extends PartialType(CreateVariantDto) {}
