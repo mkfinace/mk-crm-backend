@@ -12,6 +12,8 @@ import { QuotationsModule } from './quotations/quotations.module';
 import { TestDrivesModule } from './testdrives/testdrives.module';
 import { DocumentsModule } from './documents/documents.module';
 import { FinanceCasesModule } from './financecases/financecases.module';
+import { BookingsModule } from './bookings/bookings.module';
+import { DeliveriesModule } from './deliveries/deliveries.module';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { FinanceCasesModule } from './financecases/financecases.module';
     TestDrivesModule,
     DocumentsModule,
     FinanceCasesModule,
+    BookingsModule,
+    DeliveriesModule,
   ],
   controllers: [AppController],
 })
