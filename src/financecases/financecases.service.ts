@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuditLogsService } from '../auditlogs/auditlogs.service';
 
 export const FINANCE_CASE_STAGES = [
   'PENDING', 'DOCUMENTS', 'LOGIN', 'VERIFICATION', 'BANK_QUERY',
@@ -8,7 +9,7 @@ export const FINANCE_CASE_STAGES = [
 
 @Injectable()
 export class FinanceCasesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private auditLogs: AuditLogsService) {}
 
   async createFinanceCase(data: {
     leadId: string;
@@ -29,12 +30,12 @@ export class FinanceCasesService {
 
     const financeCase = await this.prisma.financeCase.create({ data });
 
-    // Link the bank + finance executive back onto the lead for visibility
     await this.prisma.lead.update({
       where: { id: data.leadId },
       data: { bankId: data.bankId, financeExecutiveId: data.financeExecutiveId, financeStatus: 'PENDING' },
     });
 
+    await this.auditLogs.logAction(data.financeExecutiveId, 'FinanceCase', financeCase.id, 'FINANCE_CASE_CREATED', undefined, { loanAmount: data.loanAmount });
     return financeCase;
   }
 
@@ -68,9 +69,9 @@ export class FinanceCasesService {
       data: { financeCaseId: id, fromStage: financeCase.stage, toStage: stage, changedBy, notes },
     });
 
-    // Keep the lead's financeStatus in sync with the finance case stage
     await this.prisma.lead.update({ where: { id: financeCase.leadId }, data: { financeStatus: stage } });
 
+    await this.auditLogs.logAction(changedBy, 'FinanceCase', id, 'FINANCE_STAGE_UPDATED', { stage: financeCase.stage }, { stage });
     return updated;
   }
 }
