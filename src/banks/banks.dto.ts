@@ -1,14 +1,39 @@
-import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateBankDto {
   @ApiProperty({ example: 'HDFC Bank' })
   @IsString()
   @IsNotEmpty()
   name: string;
+
+  @ApiPropertyOptional({ example: '9824700000' })
+  @IsString()
+  @IsOptional()
+  phone?: string;
+
+  @ApiPropertyOptional({ example: 'contact@hdfcbank.com' })
+  @IsEmail()
+  @IsOptional()
+  email?: string;
 }
 
-export class UpdateBankDto extends PartialType(CreateBankDto) {}
+export class UpdateBankDto {
+  @ApiPropertyOptional({ example: 'HDFC Bank' })
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @ApiPropertyOptional({ example: '9824700000' })
+  @IsString()
+  @IsOptional()
+  phone?: string;
+
+  @ApiPropertyOptional({ example: 'contact@hdfcbank.com' })
+  @IsEmail()
+  @IsOptional()
+  email?: string;
+}
 
 export class CreateBankBranchDto {
   @ApiProperty({ example: 'Valsad Branch' })
