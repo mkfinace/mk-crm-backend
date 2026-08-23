@@ -14,6 +14,12 @@ export class CatalogueService {
     return this.prisma.brand.create({ data });
   }
 
+  async updateBrand(id: string, data: { name?: string; logoUrl?: string }) {
+    const brand = await this.prisma.brand.findUnique({ where: { id } });
+    if (!brand) throw new NotFoundException('Brand not found.');
+    return this.prisma.brand.update({ where: { id }, data });
+  }
+
   async deleteBrand(id: string) {
     const brand = await this.prisma.brand.findUnique({ where: { id } });
     if (!brand) throw new NotFoundException('Brand not found.');
@@ -34,6 +40,12 @@ export class CatalogueService {
 
   createModel(data: { brandId: string; name: string }) {
     return this.prisma.model.create({ data });
+  }
+
+  async updateModel(id: string, data: { brandId?: string; name?: string }) {
+    const model = await this.prisma.model.findUnique({ where: { id } });
+    if (!model) throw new NotFoundException('Model not found.');
+    return this.prisma.model.update({ where: { id }, data });
   }
 
   async deleteModel(id: string) {
@@ -64,6 +76,20 @@ export class CatalogueService {
     specsJson?: string;
   }) {
     return this.prisma.variant.create({ data });
+  }
+
+  async updateVariant(id: string, data: {
+    modelId?: string;
+    name?: string;
+    fuelType?: string;
+    transmission?: string;
+    exShowroomPrice?: number;
+    featuresJson?: string;
+    specsJson?: string;
+  }) {
+    const variant = await this.prisma.variant.findUnique({ where: { id } });
+    if (!variant) throw new NotFoundException('Variant not found.');
+    return this.prisma.variant.update({ where: { id }, data });
   }
 
   async deleteVariant(id: string) {
