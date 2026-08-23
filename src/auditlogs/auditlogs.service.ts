@@ -16,4 +16,23 @@ export class AuditLogsService {
       take: 200,
     });
   }
+
+  // Called by other services to record a change. Never throws — a failed
+  // audit write should not block the actual business operation.
+  async logAction(userId: string, entity: string, entityId: string, action: string, before?: any, after?: any) {
+    try {
+      await this.prisma.auditLog.create({
+        data: {
+          userId,
+          entity,
+          entityId,
+          action,
+          beforeJson: before !== undefined ? JSON.stringify(before) : undefined,
+          afterJson: after !== undefined ? JSON.stringify(after) : undefined,
+        },
+      });
+    } catch (e) {
+      // Swallow — audit logging is best-effort, not a request blocker.
+    }
+  }
 }
