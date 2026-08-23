@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Post, Put, Param, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, Put, Param, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service';
-import { CreateUserDto, LoginDto } from './users.dto';
+import { CreateUserDto, LoginDto, UpdateUserDto } from './users.dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -18,9 +18,19 @@ export class UsersController {
     return this.usersService.listUsers(role);
   }
 
+  @Put(':id')
+  updateUser(@Param('id') id: string, @Body() data: UpdateUserDto) {
+    return this.usersService.updateUser(id, data);
+  }
+
   @Put(':id/toggle-active')
   toggleActive(@Param('id') id: string) {
     return this.usersService.toggleActive(id);
+  }
+
+  @Delete(':id')
+  deleteUser(@Param('id') id: string) {
+    return this.usersService.deleteUser(id);
   }
 
   @Post('login')
