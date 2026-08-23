@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { LeadsService } from './leads.service';
-import { AddFollowUpDto, AssignLeadDto, CreateLeadDto, UpdateFinanceStatusDto, UpdateSalesStatusDto } from './leads.dto';
+import { AddFollowUpDto, AssignLeadDto, CreateLeadDto, UpdateFinanceStatusDto, UpdateLeadDto, UpdateSalesStatusDto } from './leads.dto';
 
 @ApiTags('leads')
 @Controller('leads')
@@ -25,6 +25,16 @@ export class LeadsController {
   @Get(':id')
   getLead(@Param('id') id: string) {
     return this.leadsService.getLead(id);
+  }
+
+  @Put(':id')
+  updateLead(@Param('id') id: string, @Body() data: UpdateLeadDto) {
+    return this.leadsService.updateLead(id, data);
+  }
+
+  @Delete(':id')
+  deleteLead(@Param('id') id: string) {
+    return this.leadsService.deleteLead(id);
   }
 
   @Put(':id/assign')
