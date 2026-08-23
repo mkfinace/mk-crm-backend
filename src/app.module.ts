@@ -6,6 +6,10 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { CatalogueModule } from './catalogue/catalogue.module';
 import { LeadsModule } from './leads/leads.module';
+import { DealersModule } from './dealers/dealers.module';
+import { BanksModule } from './banks/banks.module';
+import { QuotationsModule } from './quotations/quotations.module';
+import { TestDrivesModule } from './testdrives/testdrives.module';
 
 @Module({
   imports: [
@@ -15,6 +19,10 @@ import { LeadsModule } from './leads/leads.module';
     UsersModule,
     CatalogueModule,
     LeadsModule,
+    DealersModule,
+    BanksModule,
+    QuotationsModule,
+    TestDrivesModule,
   ],
   controllers: [AppController],
 })
