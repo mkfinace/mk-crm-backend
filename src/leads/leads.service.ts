@@ -1,11 +1,11 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuditLogsService } from '../auditlogs/auditlogs.service';
 
-// Locked pipeline sequences per CLAUDE.md section 9 & 11
 export const SALES_PIPELINE = [
   'NEW', 'CONTACTED', 'QUALIFIED', 'INTERESTED', 'TEST_DRIVE', 'QUOTATION',
   'NEGOTIATION', 'BOOKING', 'DELIVERY', 'CLOSED',
-]; // HOLD and LOST can apply at any point
+];
 export const FINANCE_PIPELINE = [
   'NOT_REQUIRED', 'PENDING', 'DOCUMENTS', 'LOGIN', 'VERIFICATION', 'BANK_QUERY',
   'QUERY_RESOLVED', 'SANCTION', 'AGREEMENT', 'DISBURSEMENT', 'FINANCE_COMPLETED',
@@ -17,7 +17,7 @@ export const LOST_REASONS = [
 
 @Injectable()
 export class LeadsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private auditLogs: AuditLogsService) {}
 
   private async generateLeadCode(): Promise<string> {
     const year = new Date().getFullYear();
@@ -138,7 +138,6 @@ export class LeadsService {
     const lead = await this.prisma.lead.findUnique({ where: { id } });
     if (!lead) throw new NotFoundException('Lead not found.');
     try {
-      // Clean up dependent records first (they don't cascade automatically)
       await this.prisma.activity.deleteMany({ where: { leadId: id } });
       await this.prisma.followUp.deleteMany({ where: { leadId: id } });
       await this.prisma.assignment.deleteMany({ where: { leadId: id } });
@@ -160,7 +159,7 @@ export class LeadsService {
   }
 
   async assignLead(id: string, data: { dealerExecutiveId?: string; financeExecutiveId?: string; assignedBy: string }) {
-    await this.getLead(id); // 404 if missing
+    await this.getLead(id);
     const lead = await this.prisma.lead.update({
       where: { id },
       data: {
@@ -177,6 +176,7 @@ export class LeadsService {
       },
     });
     await this.logActivity(id, data.assignedBy, 'LEAD_ASSIGNED', { dealerExecutiveId: data.dealerExecutiveId, financeExecutiveId: data.financeExecutiveId });
+    await this.auditLogs.logAction(data.assignedBy, 'Lead', id, 'LEAD_ASSIGNED', undefined, { dealerExecutiveId: data.dealerExecutiveId, financeExecutiveId: data.financeExecutiveId });
     return lead;
   }
 
@@ -187,6 +187,7 @@ export class LeadsService {
     if (status === 'LOST' && !lostReasonId) {
       throw new BadRequestException('Lost reason is mandatory when marking a lead as LOST.');
     }
+    const before = await this.prisma.lead.findUnique({ where: { id } });
     const lead = await this.prisma.lead.update({
       where: { id },
       data: {
@@ -197,6 +198,7 @@ export class LeadsService {
       },
     });
     await this.logActivity(id, userId, 'SALES_STATUS_UPDATED', { status });
+    await this.auditLogs.logAction(userId, 'Lead', id, 'SALES_STATUS_UPDATED', { salesStatus: before?.salesStatus }, { salesStatus: status });
     return lead;
   }
 
@@ -204,8 +206,10 @@ export class LeadsService {
     if (!FINANCE_PIPELINE.includes(status)) {
       throw new BadRequestException(`Invalid finance status: ${status}`);
     }
+    const before = await this.prisma.lead.findUnique({ where: { id } });
     const lead = await this.prisma.lead.update({ where: { id }, data: { financeStatus: status } });
     await this.logActivity(id, userId, 'FINANCE_STATUS_UPDATED', { status });
+    await this.auditLogs.logAction(userId, 'Lead', id, 'FINANCE_STATUS_UPDATED', { financeStatus: before?.financeStatus }, { financeStatus: status });
     return lead;
   }
 
