@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateLeadDto {
@@ -52,6 +52,8 @@ export class CreateLeadDto {
   @IsOptional()
   source?: string;
 }
+
+export class UpdateLeadDto extends PartialType(CreateLeadDto) {}
 
 export class AssignLeadDto {
   @ApiPropertyOptional({ example: 'user-id-of-dealer-exec' })
