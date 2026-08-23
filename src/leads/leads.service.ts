@@ -83,6 +83,7 @@ export class LeadsService {
       where: { id },
       include: {
         customer: true, brand: true, model: true, variant: true, dealer: true,
+        dealerExecutive: true, financeExecutive: true, bank: true,
         followUps: { orderBy: { createdAt: 'desc' } },
         activities: { orderBy: { createdAt: 'desc' } },
         quotations: true, testDrives: true, documents: true,
@@ -158,14 +159,38 @@ export class LeadsService {
     }
   }
 
-  async assignLead(id: string, data: { dealerExecutiveId?: string; financeExecutiveId?: string; assignedBy: string }) {
-    await this.getLead(id);
+  async assignLead(id: string, data: {
+    dealerId?: string;
+    dealerExecutiveId?: string;
+    bankId?: string;
+    financeExecutiveId?: string;
+    assignedBy: string;
+  }) {
+    await this.getLead(id); // 404 if missing
+
+    // Validate the executive actually belongs to the selected dealer/bank.
+    if (data.dealerExecutiveId && data.dealerId) {
+      const exec = await this.prisma.dealerExecutive.findUnique({ where: { userId: data.dealerExecutiveId } });
+      if (!exec || exec.dealerId !== data.dealerId) {
+        throw new BadRequestException('This executive does not belong to the selected dealer.');
+      }
+    }
+    if (data.financeExecutiveId && data.bankId) {
+      const exec = await this.prisma.financeExecutive.findUnique({ where: { userId: data.financeExecutiveId } });
+      if (!exec || exec.bankId !== data.bankId) {
+        throw new BadRequestException('This executive does not belong to the selected bank.');
+      }
+    }
+
     const lead = await this.prisma.lead.update({
       where: { id },
       data: {
+        dealerId: data.dealerId,
         dealerExecutiveId: data.dealerExecutiveId,
+        bankId: data.bankId,
         financeExecutiveId: data.financeExecutiveId,
       },
+      include: { dealer: true, dealerExecutive: true, bank: true, financeExecutive: true },
     });
     await this.prisma.assignment.create({
       data: {
@@ -175,8 +200,14 @@ export class LeadsService {
         assignedBy: data.assignedBy,
       },
     });
-    await this.logActivity(id, data.assignedBy, 'LEAD_ASSIGNED', { dealerExecutiveId: data.dealerExecutiveId, financeExecutiveId: data.financeExecutiveId });
-    await this.auditLogs.logAction(data.assignedBy, 'Lead', id, 'LEAD_ASSIGNED', undefined, { dealerExecutiveId: data.dealerExecutiveId, financeExecutiveId: data.financeExecutiveId });
+    await this.logActivity(id, data.assignedBy, 'LEAD_ASSIGNED', {
+      dealerId: data.dealerId, dealerExecutiveId: data.dealerExecutiveId,
+      bankId: data.bankId, financeExecutiveId: data.financeExecutiveId,
+    });
+    await this.auditLogs.logAction(data.assignedBy, 'Lead', id, 'LEAD_ASSIGNED', undefined, {
+      dealerId: data.dealerId, dealerExecutiveId: data.dealerExecutiveId,
+      bankId: data.bankId, financeExecutiveId: data.financeExecutiveId,
+    });
     return lead;
   }
 
