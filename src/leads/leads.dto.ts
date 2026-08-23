@@ -56,12 +56,22 @@ export class CreateLeadDto {
 export class UpdateLeadDto extends PartialType(CreateLeadDto) {}
 
 export class AssignLeadDto {
-  @ApiPropertyOptional({ example: 'user-id-of-dealer-exec' })
+  @ApiPropertyOptional({ example: 'dealer-id-here', description: 'The dealership this lead is handled by' })
+  @IsString()
+  @IsOptional()
+  dealerId?: string;
+
+  @ApiPropertyOptional({ example: 'user-id-of-dealer-exec', description: 'Must belong to the selected dealer' })
   @IsString()
   @IsOptional()
   dealerExecutiveId?: string;
 
-  @ApiPropertyOptional({ example: 'user-id-of-finance-exec' })
+  @ApiPropertyOptional({ example: 'bank-id-here', description: 'The bank handling this lead\'s finance' })
+  @IsString()
+  @IsOptional()
+  bankId?: string;
+
+  @ApiPropertyOptional({ example: 'user-id-of-finance-exec', description: 'Must belong to the selected bank' })
   @IsString()
   @IsOptional()
   financeExecutiveId?: string;
