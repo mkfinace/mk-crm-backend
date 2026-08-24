@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { DynamicFieldsService } from './dynamic-fields.service';
 import {
@@ -55,6 +55,11 @@ export class DynamicFieldsController {
   @Put('field-definitions/:id/restore')
   restoreField(@Param('id') id: string) {
     return this.service.restoreField(id);
+  }
+
+  @Delete('field-definitions/:id')
+  deleteField(@Param('id') id: string) {
+    return this.service.deleteField(id);
   }
 
   @Post('field-values')
