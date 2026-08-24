@@ -48,7 +48,7 @@ export class DynamicFieldsService {
     const existing = await this.prisma.fieldDefinition.findUnique({ where: { key: data.key } });
     if (existing) {
       if (existing.status === 'ARCHIVED') {
-        throw new BadRequestException(`Key "${data.key}" belongs to an archived field ("${existing.name}"). Restore it from the Archived section instead of creating a new one, or pick a different key.`);
+        throw new BadRequestException(`Key "${data.key}" belongs to an archived field ("${existing.name}"). Restore or permanently delete it first, or pick a different key.`);
       }
       throw new BadRequestException(`A field with key "${data.key}" already exists.`);
     }
@@ -114,6 +114,16 @@ export class DynamicFieldsService {
     const field = await this.prisma.fieldDefinition.findUnique({ where: { id } });
     if (!field) throw new NotFoundException('Field not found.');
     return this.prisma.fieldDefinition.update({ where: { id }, data: { status: 'ACTIVE' } });
+  }
+
+  async deleteField(id: string) {
+    const field = await this.prisma.fieldDefinition.findUnique({ where: { id } });
+    if (!field) throw new NotFoundException('Field not found.');
+    // Permanently removes the field, its options, and any values entered
+    // against variants — this cannot be undone (unlike archive).
+    await this.prisma.fieldValue.deleteMany({ where: { fieldId: id } });
+    await this.prisma.fieldOption.deleteMany({ where: { fieldId: id } });
+    return this.prisma.fieldDefinition.delete({ where: { id } });
   }
 
   // ---- Field values (per variant) ----
