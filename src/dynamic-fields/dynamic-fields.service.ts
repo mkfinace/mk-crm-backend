@@ -46,7 +46,12 @@ export class DynamicFieldsService {
     if (!category) throw new NotFoundException('Category not found.');
 
     const existing = await this.prisma.fieldDefinition.findUnique({ where: { key: data.key } });
-    if (existing) throw new BadRequestException(`A field with key "${data.key}" already exists.`);
+    if (existing) {
+      if (existing.status === 'ARCHIVED') {
+        throw new BadRequestException(`Key "${data.key}" belongs to an archived field ("${existing.name}"). Restore it from the Archived section instead of creating a new one, or pick a different key.`);
+      }
+      throw new BadRequestException(`A field with key "${data.key}" already exists.`);
+    }
 
     if ((data.dataType === 'SELECT' || data.dataType === 'MULTI_SELECT') && (!data.options || data.options.length === 0)) {
       throw new BadRequestException('SELECT and MULTI_SELECT fields need at least one option.');
@@ -81,6 +86,14 @@ export class DynamicFieldsService {
     });
   }
 
+  listArchivedFields() {
+    return this.prisma.fieldDefinition.findMany({
+      where: { status: 'ARCHIVED' },
+      orderBy: { updatedAt: 'desc' },
+      include: { options: true, category: true },
+    });
+  }
+
   async updateField(id: string, data: {
     name?: string; alias?: string; unit?: string; customerVisible?: boolean;
     filterEnabled?: boolean; comparisonEnabled?: boolean; required?: boolean;
@@ -95,6 +108,12 @@ export class DynamicFieldsService {
     const field = await this.prisma.fieldDefinition.findUnique({ where: { id } });
     if (!field) throw new NotFoundException('Field not found.');
     return this.prisma.fieldDefinition.update({ where: { id }, data: { status: 'ARCHIVED' } });
+  }
+
+  async restoreField(id: string) {
+    const field = await this.prisma.fieldDefinition.findUnique({ where: { id } });
+    if (!field) throw new NotFoundException('Field not found.');
+    return this.prisma.fieldDefinition.update({ where: { id }, data: { status: 'ACTIVE' } });
   }
 
   // ---- Field values (per variant) ----
