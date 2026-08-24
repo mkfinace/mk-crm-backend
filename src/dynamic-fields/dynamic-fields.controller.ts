@@ -37,6 +37,11 @@ export class DynamicFieldsController {
     return this.service.listFields(categoryId);
   }
 
+  @Get('field-definitions/archived')
+  listArchivedFields() {
+    return this.service.listArchivedFields();
+  }
+
   @Put('field-definitions/:id')
   updateField(@Param('id') id: string, @Body() data: UpdateFieldDefinitionDto) {
     return this.service.updateField(id, data);
@@ -45,6 +50,11 @@ export class DynamicFieldsController {
   @Put('field-definitions/:id/archive')
   archiveField(@Param('id') id: string) {
     return this.service.archiveField(id);
+  }
+
+  @Put('field-definitions/:id/restore')
+  restoreField(@Param('id') id: string) {
+    return this.service.restoreField(id);
   }
 
   @Post('field-values')
