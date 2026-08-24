@@ -103,8 +103,9 @@ model Variant {
   featuresJson     String? // JSON string (SQLite has no native Json type)
   specsJson        String?
 
-  vehicles Vehicle[]
-  leads    Lead[]
+  vehicles    Vehicle[]
+  leads       Lead[]
+  fieldValues FieldValue[]
 }
 
 model Vehicle {
@@ -114,6 +115,77 @@ model Vehicle {
   colourOptionsJson String?
   imagesJson      String?
   isActive        Boolean @default(true)
+}
+
+// ==================== DYNAMIC FIELD SYSTEM ====================
+// Lets Admin define new car specifications/features at runtime — no DB
+// migration or frontend code change needed for a new spec to appear.
+
+model FieldCategory {
+  id           String @id @default(cuid())
+  name         String @unique // e.g. "Safety", "Comfort", "Engine"
+  displayOrder Int    @default(0)
+  status       String @default("ACTIVE") // ACTIVE | ARCHIVED
+
+  fields FieldDefinition[]
+}
+
+model FieldDefinition {
+  id         String        @id @default(cuid())
+  categoryId String
+  category   FieldCategory @relation(fields: [categoryId], references: [id])
+
+  name  String // display name, e.g. "Number of Airbags"
+  key   String @unique // machine key, e.g. "airbags_count"
+  alias String? // comma-separated synonyms for brochure-matching later
+
+  // TEXT, LONG_TEXT, INTEGER, NUMBER, DECIMAL, BOOLEAN, SELECT, MULTI_SELECT,
+  // CURRENCY, PERCENTAGE, DATE, VALUE_UNIT, IMAGE, URL
+  dataType String
+
+  unit String? // e.g. "mm", "kg", "PS", "Nm"
+
+  customerVisible   Boolean @default(true)
+  filterEnabled     Boolean @default(false)
+  comparisonEnabled Boolean @default(false)
+  required          Boolean @default(false)
+  displayOrder      Int     @default(0)
+  status            String  @default("ACTIVE") // ACTIVE | ARCHIVED
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  options FieldOption[]
+  values  FieldValue[]
+}
+
+model FieldOption {
+  id           String          @id @default(cuid())
+  fieldId      String
+  field        FieldDefinition @relation(fields: [fieldId], references: [id])
+  label        String
+  value        String
+  displayOrder Int             @default(0)
+}
+
+model FieldValue {
+  id        String          @id @default(cuid())
+  fieldId   String
+  field     FieldDefinition @relation(fields: [fieldId], references: [id])
+  variantId String
+  variant   Variant         @relation(fields: [variantId], references: [id])
+
+  valueText    String?
+  valueNumber  Float?
+  valueBoolean Boolean?
+
+  // STANDARD, OPTIONAL, NOT_AVAILABLE, PACKAGE, ACCESSORY
+  applicability String @default("STANDARD")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([fieldId, variantId])
 }
 
 // ==================== CUSTOMER & LEAD ====================
