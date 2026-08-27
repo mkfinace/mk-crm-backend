@@ -190,6 +190,19 @@ model FieldValue {
   @@unique([fieldId, variantId])
 }
 
+// ==================== SITE CONTENT (ADMIN-EDITABLE) ====================
+// Generic key-value content store — lets admin edit site-wide text, rates,
+// labels etc. from an admin screen without a code change or redeploy.
+
+model SiteSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  label     String
+  group     String   @default("general")
+  valueJson String
+  updatedAt DateTime @updatedAt
+}
+
 // ==================== CUSTOMER & LEAD ====================
 
 model Customer {

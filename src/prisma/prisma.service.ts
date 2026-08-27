@@ -21,7 +21,20 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       await this.$executeRawUnsafe(
         `ALTER TABLE "Model" ADD COLUMN IF NOT EXISTS "category" TEXT NOT NULL DEFAULT 'CAR';`
       );
-      this.logger.log('Startup migration check complete (Model.category ensured).');
+      await this.$executeRawUnsafe(
+        `CREATE TABLE IF NOT EXISTS "SiteSetting" (
+          "id" TEXT NOT NULL PRIMARY KEY,
+          "key" TEXT NOT NULL,
+          "label" TEXT NOT NULL,
+          "group" TEXT NOT NULL DEFAULT 'general',
+          "valueJson" TEXT NOT NULL,
+          "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );`
+      );
+      await this.$executeRawUnsafe(
+        `CREATE UNIQUE INDEX IF NOT EXISTS "SiteSetting_key_key" ON "SiteSetting"("key");`
+      );
+      this.logger.log('Startup migration check complete (Model.category, SiteSetting table ensured).');
     } catch (e) {
       this.logger.error('Startup migration failed — check DB permissions.', e as Error);
     }
