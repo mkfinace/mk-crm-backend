@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { slugify } from '../common/slugify';
 
 @Injectable()
 export class CatalogueService {
@@ -113,5 +114,69 @@ export class CatalogueService {
         },
       },
     });
+  }
+
+  // ---- Public model detail page (for /[brand]/[model] on the website) ----
+  // Brand/Model have no dedicated slug column, so we slugify the name and
+  // match against the URL params. Returns every variant with its Field
+  // Builder specs (grouped by category) and colours/images.
+  async getModelBySlug(brandSlug: string, modelSlug: string) {
+    const brands = await this.prisma.brand.findMany({
+      where: { status: 'ACTIVE' },
+      include: {
+        models: {
+          where: { status: 'ACTIVE' },
+          include: {
+            variants: {
+              include: {
+                fieldValues: { include: { field: { include: { category: true } } } },
+                vehicles: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const brand = brands.find((b) => slugify(b.name) === brandSlug);
+    if (!brand) throw new NotFoundException('Brand not found.');
+
+    const model = brand.models.find((m) => slugify(m.name) === modelSlug);
+    if (!model) throw new NotFoundException('Model not found.');
+
+    return {
+      brand: { id: brand.id, name: brand.name, logoUrl: brand.logoUrl },
+      model: { id: model.id, name: model.name },
+      variants: model.variants.map((v) => ({
+        id: v.id,
+        name: v.name,
+        fuelType: v.fuelType,
+        transmission: v.transmission,
+        exShowroomPrice: v.exShowroomPrice,
+        featuresJson: v.featuresJson,
+        specsJson: v.specsJson,
+        specs: v.fieldValues
+          .filter((fv) => fv.field.customerVisible)
+          .map((fv) => ({
+            categoryName: fv.field.category.name,
+            categoryOrder: fv.field.category.displayOrder,
+            fieldName: fv.field.name,
+            fieldKey: fv.field.key,
+            dataType: fv.field.dataType,
+            unit: fv.field.unit,
+            applicability: fv.applicability,
+            valueText: fv.valueText,
+            valueNumber: fv.valueNumber,
+            valueBoolean: fv.valueBoolean,
+            displayOrder: fv.field.displayOrder,
+          })),
+        vehicle: v.vehicles[0]
+          ? {
+              colours: v.vehicles[0].colourOptionsJson ? JSON.parse(v.vehicles[0].colourOptionsJson) : [],
+              images: v.vehicles[0].imagesJson ? JSON.parse(v.vehicles[0].imagesJson) : [],
+            }
+          : { colours: [], images: [] },
+      })),
+    };
   }
 }

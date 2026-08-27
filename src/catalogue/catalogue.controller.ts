@@ -13,6 +13,12 @@ export class CatalogueController {
     return this.catalogueService.fullCatalogue();
   }
 
+  // Public detail page data for /[brand]/[model] on mk-crm-frontend
+  @Get('model/:brandSlug/:modelSlug')
+  getModelBySlug(@Param('brandSlug') brandSlug: string, @Param('modelSlug') modelSlug: string) {
+    return this.catalogueService.getModelBySlug(brandSlug, modelSlug);
+  }
+
   @Get('brands')
   listBrands() {
     return this.catalogueService.listBrands();
