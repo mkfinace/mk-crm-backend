@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UnauthorizedException } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CatalogueService } from './catalogue.service';
 import { CreateBrandDto, CreateModelDto, CreateVariantDto, UpdateBrandDto, UpdateModelDto, UpdateVariantDto } from './catalogue.dto';
@@ -11,6 +11,17 @@ export class CatalogueController {
   @Get('full')
   fullCatalogue() {
     return this.catalogueService.fullCatalogue();
+  }
+
+  // One-off demo-data loader — open this URL once in a browser (no shell
+  // needed). Safe to open more than once (idempotent upserts). Remove this
+  // route once you no longer need it.
+  @Get('admin/seed-commercial')
+  seedCommercial(@Query('key') key: string) {
+    if (key !== (process.env.SEED_KEY || 'mkfinance-seed-2026')) {
+      throw new UnauthorizedException('Invalid or missing key.');
+    }
+    return this.catalogueService.seedCommercialDemo();
   }
 
   // Public detail page data for /[brand]/[model] on mk-crm-frontend
