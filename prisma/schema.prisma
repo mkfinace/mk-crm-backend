@@ -86,6 +86,8 @@ model Model {
   brandId String
   brand   Brand  @relation(fields: [brandId], references: [id])
   name    String
+  // CAR, TRUCK, TEMPO, PICKUP, TRACTOR, BUS, CONSTRUCTION
+  category String @default("CAR")
   status  String @default("ACTIVE")
 
   variants Variant[]

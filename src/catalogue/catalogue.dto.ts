@@ -25,6 +25,11 @@ export class CreateModelDto {
   @IsString()
   @IsNotEmpty()
   name: string;
+
+  @ApiPropertyOptional({ example: 'CAR', description: 'CAR, TRUCK, TEMPO, PICKUP, TRACTOR, BUS, CONSTRUCTION' })
+  @IsString()
+  @IsOptional()
+  category?: string;
 }
 
 export class UpdateModelDto extends PartialType(CreateModelDto) {}
