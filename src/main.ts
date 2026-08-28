@@ -1,10 +1,16 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { json } from 'express';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Raised from the default ~100kb — hero image/video uploads are sent as
+  // base64 data URIs (stored directly in Site Settings, no separate file
+  // storage needed), which can be several MB once base64-encoded.
+  app.use(json({ limit: '25mb' }));
 
   app.useGlobalPipes(
     new ValidationPipe({
