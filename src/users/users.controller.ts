@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Post, Put, Param, Query, UseGuards, UnauthorizedException } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, Put, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from './users.service';
@@ -60,22 +60,5 @@ export class UsersController {
     const { passwordHash, ...safeUser } = user;
     const token = this.jwt.sign({ sub: user.id, role: user.role, mobile: user.mobile });
     return { success: true, user: safeUser, token };
-  }
-
-  // Emergency password reset — open once in a browser (no shell/DB access
-  // needed). Remove or change SEED_KEY once you don't need this exposed.
-  @Get('admin/reset-password')
-  async resetPasswordEmergency(
-    @Query('key') key: string,
-    @Query('mobile') mobile: string,
-    @Query('newPassword') newPassword: string,
-  ) {
-    if (key !== (process.env.SEED_KEY || 'mkfinance-seed-2026')) {
-      throw new UnauthorizedException('Invalid or missing key.');
-    }
-    if (!mobile || !newPassword || newPassword.length < 4) {
-      throw new UnauthorizedException('Provide ?mobile=...&newPassword=... (min 4 characters).');
-    }
-    return this.usersService.resetPasswordEmergency(mobile, newPassword);
   }
 }
