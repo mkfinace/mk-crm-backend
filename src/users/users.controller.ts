@@ -61,4 +61,16 @@ export class UsersController {
     const token = this.jwt.sign({ sub: user.id, role: user.role, mobile: user.mobile });
     return { success: true, user: safeUser, token };
   }
+
+  // Public — self-service "Forgot Password", OTP-based (reuses the OTP
+  // system already built for customer login — no admin help needed).
+  @Post('forgot-password/request')
+  requestPasswordReset(@Body('mobile') mobile: string) {
+    return this.usersService.requestPasswordResetOtp(mobile);
+  }
+
+  @Post('forgot-password/reset')
+  resetPasswordWithOtp(@Body('mobile') mobile: string, @Body('code') code: string, @Body('newPassword') newPassword: string) {
+    return this.usersService.resetPasswordWithOtp(mobile, code, newPassword);
+  }
 }
