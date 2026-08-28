@@ -48,7 +48,7 @@ const DEFAULT_SETTINGS: { key: string; label: string; group: string; value: any 
     key: 'hero_slides',
     label: 'Hero — Slides',
     group: 'hero',
-    value: [{ type: 'icon', url: '', animation: 'fade', showText: true }],
+    value: [{ type: 'icon', url: '', animation: 'fade', showText: true, fit: 'cover' }],
   },
 
   // ---- Stats (homepage hero strip) ----
