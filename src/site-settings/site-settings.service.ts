@@ -44,6 +44,12 @@ const DEFAULT_SETTINGS: { key: string; label: string; group: string; value: any 
   { key: 'hero_trust_3', label: 'Hero — Trust Badge 3', group: 'hero', value: 'No Hidden Charges' },
   { key: 'hero_rate_badge', label: 'Hero — "Best Rate" Badge', group: 'hero', value: '7.5% p.a.' },
   { key: 'hero_rating_badge', label: 'Hero — Customer Rating Badge', group: 'hero', value: '4.8 / 5' },
+  {
+    key: 'hero_media',
+    label: 'Hero — Image / Video',
+    group: 'hero',
+    value: { type: 'icon', url: '', animation: 'fade' },
+  },
 
   // ---- Stats (homepage hero strip) ----
   { key: 'stat_approval_rate', label: 'Stat — Loan Approval Rate', group: 'stats', value: '98%' },
