@@ -89,4 +89,16 @@ export class UsersService {
     const valid = await bcrypt.compare(password, user.passwordHash);
     return valid ? user : null;
   }
+
+  // Emergency password reset — for when nobody can log in yet (e.g. the
+  // very first SUPER_ADMIN forgot their password, or an account got locked
+  // before any other admin existed). Protected by SEED_KEY, same pattern as
+  // the other one-off /admin/... routes elsewhere in this API.
+  async resetPasswordEmergency(mobile: string, newPassword: string) {
+    const user = await this.prisma.user.findUnique({ where: { mobile } });
+    if (!user) throw new BadRequestException('No user found with that mobile number.');
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await this.prisma.user.update({ where: { id: user.id }, data: { passwordHash, status: 'ACTIVE' } });
+    return { success: true, message: `Password reset for ${user.name} (${user.role}). You can log in now.` };
+  }
 }
