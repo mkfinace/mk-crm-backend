@@ -45,10 +45,10 @@ const DEFAULT_SETTINGS: { key: string; label: string; group: string; value: any 
   { key: 'hero_rate_badge', label: 'Hero — "Best Rate" Badge', group: 'hero', value: '7.5% p.a.' },
   { key: 'hero_rating_badge', label: 'Hero — Customer Rating Badge', group: 'hero', value: '4.8 / 5' },
   {
-    key: 'hero_media',
-    label: 'Hero — Image / Video',
+    key: 'hero_slides',
+    label: 'Hero — Slides',
     group: 'hero',
-    value: { type: 'icon', url: '', animation: 'fade' },
+    value: [{ type: 'icon', url: '', animation: 'fade' }],
   },
 
   // ---- Stats (homepage hero strip) ----
