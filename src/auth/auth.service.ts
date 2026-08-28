@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 
 // ============================================================================
@@ -15,7 +16,10 @@ function generateOtp(): string {
 
 @Injectable()
 export class AuthService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private jwt: JwtService,
+  ) {}
 
   async requestOtp(mobile: string) {
     if (!/^\d{10}$/.test(mobile)) {
@@ -63,6 +67,10 @@ export class AuthService {
       });
     }
 
-    return { success: true, customer };
+    return {
+      success: true,
+      customer,
+      token: this.jwt.sign({ sub: customer.id, role: 'CUSTOMER', mobile: customer.mobile }),
+    };
   }
 }

@@ -1,10 +1,16 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { DocumentsService } from './documents.service';
 import { CreateDocumentDto, ReuploadDocumentDto, VerifyDocumentDto } from './documents.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+import { STAFF_ROLES } from '../auth/role-groups';
 
 @ApiTags('documents')
 @Controller('documents')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(...STAFF_ROLES)
 export class DocumentsController {
   constructor(private documentsService: DocumentsService) {}
 

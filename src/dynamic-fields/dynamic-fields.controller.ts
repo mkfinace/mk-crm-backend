@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { DynamicFieldsService } from './dynamic-fields.service';
 import {
@@ -6,9 +6,15 @@ import {
   CreateFieldDefinitionDto, UpdateFieldDefinitionDto,
   SetFieldValueDto,
 } from './dynamic-fields.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+import { ADMIN_ROLES } from '../auth/role-groups';
 
 @ApiTags('dynamic-fields')
 @Controller()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(...ADMIN_ROLES)
 export class DynamicFieldsController {
   constructor(private service: DynamicFieldsService) {}
 

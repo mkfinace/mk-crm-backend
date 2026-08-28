@@ -1,10 +1,16 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './bookings.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+import { STAFF_ROLES } from '../auth/role-groups';
 
 @ApiTags('bookings')
 @Controller('bookings')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(...STAFF_ROLES)
 export class BookingsController {
   constructor(private bookingsService: BookingsService) {}
 

@@ -1,10 +1,16 @@
-import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { FinanceCasesService } from './financecases.service';
 import { CreateFinanceCaseDto, UpdateFinanceCaseStageDto } from './financecases.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+import { STAFF_ROLES } from '../auth/role-groups';
 
 @ApiTags('finance-cases')
 @Controller('finance-cases')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(...STAFF_ROLES)
 export class FinanceCasesController {
   constructor(private financeCasesService: FinanceCasesService) {}
 

@@ -1,10 +1,16 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { DealersService } from './dealers.service';
 import { AssignDealerExecutiveDto, AssignDealerManagerDto, CreateDealerBranchDto, CreateDealerDto, UpdateDealerDto } from './dealers.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+import { STAFF_ROLES } from '../auth/role-groups';
 
 @ApiTags('dealers')
 @Controller('dealers')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(...STAFF_ROLES)
 export class DealersController {
   constructor(private dealersService: DealersService) {}
 
