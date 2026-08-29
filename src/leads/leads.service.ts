@@ -95,7 +95,9 @@ export class LeadsService {
       where: { id },
       include: {
         customer: true, brand: true, model: true, variant: true, dealer: true,
-        dealerExecutive: true, financeExecutive: true, bank: true,
+        dealerExecutive: { select: { id: true, name: true, mobile: true, role: true } },
+        financeExecutive: { select: { id: true, name: true, mobile: true, role: true } },
+        bank: true,
         followUps: { orderBy: { createdAt: 'desc' } },
         activities: { orderBy: { createdAt: 'desc' } },
         quotations: true, testDrives: true, documents: true,
@@ -201,7 +203,12 @@ export class LeadsService {
         bankId: data.bankId,
         financeExecutiveId: data.financeExecutiveId,
       },
-      include: { dealer: true, dealerExecutive: true, bank: true, financeExecutive: true },
+      include: {
+        dealer: true,
+        dealerExecutive: { select: { id: true, name: true, mobile: true, role: true } },
+        bank: true,
+        financeExecutive: { select: { id: true, name: true, mobile: true, role: true } },
+      },
     });
     await this.prisma.assignment.create({
       data: {
