@@ -103,6 +103,56 @@ const MIGRATIONS: { name: string; sql: string }[] = [
     name: 'lead_customer_notes_field',
     sql: `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "customerNotes" TEXT;`,
   },
+  // ---- Phase B: Quotation breakdown + versioning ----
+  { name: 'quotation_version_field', sql: `ALTER TABLE "Quotation" ADD COLUMN IF NOT EXISTS "version" INTEGER NOT NULL DEFAULT 1;` },
+  { name: 'quotation_created_by_field', sql: `ALTER TABLE "Quotation" ADD COLUMN IF NOT EXISTS "createdBy" TEXT;` },
+  { name: 'quotation_ex_showroom_field', sql: `ALTER TABLE "Quotation" ADD COLUMN IF NOT EXISTS "exShowroomPrice" DOUBLE PRECISION;` },
+  { name: 'quotation_rto_field', sql: `ALTER TABLE "Quotation" ADD COLUMN IF NOT EXISTS "rto" DOUBLE PRECISION;` },
+  { name: 'quotation_insurance_field', sql: `ALTER TABLE "Quotation" ADD COLUMN IF NOT EXISTS "insurance" DOUBLE PRECISION;` },
+  { name: 'quotation_accessories_field', sql: `ALTER TABLE "Quotation" ADD COLUMN IF NOT EXISTS "accessories" DOUBLE PRECISION;` },
+  { name: 'quotation_other_charges_field', sql: `ALTER TABLE "Quotation" ADD COLUMN IF NOT EXISTS "otherCharges" DOUBLE PRECISION;` },
+  { name: 'quotation_discount_field', sql: `ALTER TABLE "Quotation" ADD COLUMN IF NOT EXISTS "discount" DOUBLE PRECISION;` },
+  { name: 'quotation_exchange_bonus_field', sql: `ALTER TABLE "Quotation" ADD COLUMN IF NOT EXISTS "exchangeBonus" DOUBLE PRECISION;` },
+  { name: 'quotation_dealer_offer_field', sql: `ALTER TABLE "Quotation" ADD COLUMN IF NOT EXISTS "dealerOffer" DOUBLE PRECISION;` },
+  { name: 'quotation_manufacturer_offer_field', sql: `ALTER TABLE "Quotation" ADD COLUMN IF NOT EXISTS "manufacturerOffer" DOUBLE PRECISION;` },
+  // ---- Phase B: Negotiation table ----
+  {
+    name: 'negotiation_table',
+    sql: `CREATE TABLE IF NOT EXISTS "Negotiation" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "leadId" TEXT NOT NULL,
+      "customerExpectedPrice" DOUBLE PRECISION,
+      "dealerOfferedPrice" DOUBLE PRECISION,
+      "discountRequested" DOUBLE PRECISION,
+      "discountApproved" DOUBLE PRECISION,
+      "exchangeValueOffered" DOUBLE PRECISION,
+      "accessoriesOffered" TEXT,
+      "specialOffer" TEXT,
+      "requiresApproval" BOOLEAN NOT NULL DEFAULT false,
+      "approvalStatus" TEXT NOT NULL DEFAULT 'NOT_REQUIRED',
+      "approvedBy" TEXT,
+      "notes" TEXT,
+      "createdBy" TEXT NOT NULL,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );`,
+  },
+  // ---- Phase B: BankQuery table ----
+  {
+    name: 'bank_query_table',
+    sql: `CREATE TABLE IF NOT EXISTS "BankQuery" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "financeCaseId" TEXT NOT NULL,
+      "query" TEXT NOT NULL,
+      "requestedDocument" TEXT,
+      "dueDate" TIMESTAMP(3),
+      "status" TEXT NOT NULL DEFAULT 'OPEN',
+      "createdBy" TEXT NOT NULL,
+      "resolvedBy" TEXT,
+      "resolutionNotes" TEXT,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "resolvedAt" TIMESTAMP(3)
+    );`,
+  },
 ];
 
 @Injectable()

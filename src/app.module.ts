@@ -21,6 +21,7 @@ import { DynamicFieldsModule } from './dynamic-fields/dynamic-fields.module';
 import { VehiclesModule } from './vehicles/vehicles.module';
 import { SiteSettingsModule } from './site-settings/site-settings.module';
 import { ReportsModule } from './reports/reports.module';
+import { NegotiationsModule } from './negotiations/negotiations.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { ReportsModule } from './reports/reports.module';
     VehiclesModule,
     SiteSettingsModule,
     ReportsModule,
+    NegotiationsModule,
   ],
   controllers: [AppController],
 })

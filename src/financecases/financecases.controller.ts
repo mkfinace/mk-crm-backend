@@ -48,4 +48,22 @@ export class FinanceCasesController {
   approve(@Param('id') id: string, @Req() req: any) {
     return this.financeCasesService.approveFinanceCase(id, req.user.sub);
   }
+
+  // ---- Phase B: structured Bank Query ----
+  @Roles('SUPER_ADMIN', 'FINANCE_ADMIN', 'FINANCE_EXECUTIVE')
+  @Post(':id/bank-queries')
+  createBankQuery(@Param('id') id: string, @Body() data: { query: string; requestedDocument?: string; dueDate?: string }, @Req() req: any) {
+    return this.financeCasesService.createBankQuery(id, data, req.user.sub);
+  }
+
+  @Get(':id/bank-queries')
+  listBankQueries(@Param('id') id: string) {
+    return this.financeCasesService.listBankQueries(id);
+  }
+
+  @Roles('SUPER_ADMIN', 'FINANCE_ADMIN', 'FINANCE_EXECUTIVE')
+  @Put(':id/bank-queries/:queryId/resolve')
+  resolveBankQuery(@Param('queryId') queryId: string, @Body('resolutionNotes') resolutionNotes: string, @Req() req: any) {
+    return this.financeCasesService.resolveBankQuery(queryId, resolutionNotes, req.user.sub);
+  }
 }

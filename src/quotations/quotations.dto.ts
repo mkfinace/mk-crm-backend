@@ -24,4 +24,54 @@ export class CreateQuotationDto {
   @IsString()
   @IsNotEmpty()
   validTill: string;
+
+  @ApiPropertyOptional({ example: 'user-id-here' })
+  @IsString()
+  @IsOptional()
+  createdBy?: string;
+
+  @ApiPropertyOptional({ example: 650000 })
+  @IsNumber()
+  @IsOptional()
+  exShowroomPrice?: number;
+
+  @ApiPropertyOptional({ example: 45000 })
+  @IsNumber()
+  @IsOptional()
+  rto?: number;
+
+  @ApiPropertyOptional({ example: 25000 })
+  @IsNumber()
+  @IsOptional()
+  insurance?: number;
+
+  @ApiPropertyOptional({ example: 10000 })
+  @IsNumber()
+  @IsOptional()
+  accessories?: number;
+
+  @ApiPropertyOptional({ example: 3000 })
+  @IsNumber()
+  @IsOptional()
+  otherCharges?: number;
+
+  @ApiPropertyOptional({ example: 15000 })
+  @IsNumber()
+  @IsOptional()
+  discount?: number;
+
+  @ApiPropertyOptional({ example: 10000 })
+  @IsNumber()
+  @IsOptional()
+  exchangeBonus?: number;
+
+  @ApiPropertyOptional({ example: 5000 })
+  @IsNumber()
+  @IsOptional()
+  dealerOffer?: number;
+
+  @ApiPropertyOptional({ example: 5000 })
+  @IsNumber()
+  @IsOptional()
+  manufacturerOffer?: number;
 }

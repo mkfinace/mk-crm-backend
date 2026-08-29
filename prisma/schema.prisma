@@ -291,6 +291,7 @@ model Lead {
   followUps          FollowUp[]
   activities         Activity[]
   quotations         Quotation[]
+  negotiations       Negotiation[]
   testDrives         TestDrive[]
   documents          Document[]
   financeCase        FinanceCase?
@@ -442,6 +443,39 @@ model Quotation {
   exchangeValue Float?
   validTill     DateTime
   createdAt     DateTime @default(now())
+
+  // ---- Phase B: itemized breakdown + versioning ----
+  version           Int     @default(1)
+  createdBy         String?
+  exShowroomPrice   Float?
+  rto               Float?
+  insurance         Float?
+  accessories       Float?
+  otherCharges      Float?
+  discount          Float?
+  exchangeBonus     Float?
+  dealerOffer       Float?
+  manufacturerOffer Float?
+}
+
+// ---- Phase B: Negotiation ----
+model Negotiation {
+  id                    String   @id @default(cuid())
+  leadId                String
+  lead                  Lead     @relation(fields: [leadId], references: [id])
+  customerExpectedPrice Float?
+  dealerOfferedPrice    Float?
+  discountRequested     Float?
+  discountApproved      Float?
+  exchangeValueOffered  Float?
+  accessoriesOffered    String?
+  specialOffer          String?
+  requiresApproval      Boolean  @default(false)
+  approvalStatus        String   @default("NOT_REQUIRED") // NOT_REQUIRED, PENDING, APPROVED, REJECTED
+  approvedBy            String?
+  notes                 String?
+  createdBy             String
+  createdAt             DateTime @default(now())
 }
 
 model TestDrive {
@@ -485,6 +519,23 @@ model FinanceCase {
   createdAt           DateTime @default(now())
 
   statusHistory FinanceStatusHistory[]
+  bankQueries   BankQuery[]
+}
+
+// ---- Phase B: structured Bank Query (separate from generic FollowUp/Activity) ----
+model BankQuery {
+  id                String    @id @default(cuid())
+  financeCaseId     String
+  financeCase       FinanceCase @relation(fields: [financeCaseId], references: [id])
+  query             String
+  requestedDocument String?
+  dueDate           DateTime?
+  status            String    @default("OPEN") // OPEN, RESOLVED
+  createdBy         String
+  resolvedBy        String?
+  resolutionNotes   String?
+  createdAt         DateTime  @default(now())
+  resolvedAt        DateTime?
 }
 
 model FinanceStatusHistory {

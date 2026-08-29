@@ -133,4 +133,63 @@ export class FinanceCasesService {
     await this.auditLogs.logAction(changedBy, 'FinanceCase', id, 'FINANCE_CASE_DETAILS_UPDATED', undefined, data);
     return updated;
   }
+
+  // ---- Phase B: structured Bank Query ----
+  async createBankQuery(financeCaseId: string, data: { query: string; requestedDocument?: string; dueDate?: string }, createdBy: string) {
+    const financeCase = await this.prisma.financeCase.findUnique({ where: { id: financeCaseId } });
+    if (!financeCase) throw new NotFoundException('Finance case not found.');
+
+    const bankQuery = await this.prisma.bankQuery.create({
+      data: {
+        financeCaseId,
+        query: data.query,
+        requestedDocument: data.requestedDocument,
+        dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
+        createdBy,
+      },
+    });
+
+    // Move the case (and lead) into BANK_QUERY so it's visible in the pipeline.
+    if (financeCase.stage !== 'BANK_QUERY') {
+      await this.prisma.financeCase.update({ where: { id: financeCaseId }, data: { stage: 'BANK_QUERY' } });
+      await this.prisma.financeStatusHistory.create({
+        data: { financeCaseId, fromStage: financeCase.stage, toStage: 'BANK_QUERY', changedBy: createdBy, notes: data.query },
+      });
+      await this.prisma.lead.update({ where: { id: financeCase.leadId }, data: { financeStatus: 'BANK_QUERY' } });
+    }
+
+    await this.auditLogs.logAction(createdBy, 'BankQuery', bankQuery.id, 'BANK_QUERY_CREATED', undefined, { query: data.query });
+    return bankQuery;
+  }
+
+  listBankQueries(financeCaseId: string) {
+    return this.prisma.bankQuery.findMany({ where: { financeCaseId }, orderBy: { createdAt: 'desc' } });
+  }
+
+  async resolveBankQuery(id: string, resolutionNotes: string, resolvedBy: string) {
+    const bankQuery = await this.prisma.bankQuery.findUnique({ where: { id } });
+    if (!bankQuery) throw new NotFoundException('Bank query not found.');
+    if (bankQuery.status === 'RESOLVED') throw new BadRequestException('This query is already resolved.');
+
+    const updated = await this.prisma.bankQuery.update({
+      where: { id },
+      data: { status: 'RESOLVED', resolvedBy, resolutionNotes, resolvedAt: new Date() },
+    });
+
+    // If no other queries are still open on this case, move it forward.
+    const stillOpen = await this.prisma.bankQuery.count({ where: { financeCaseId: bankQuery.financeCaseId, status: 'OPEN' } });
+    if (stillOpen === 0) {
+      const financeCase = await this.prisma.financeCase.findUnique({ where: { id: bankQuery.financeCaseId } });
+      if (financeCase && financeCase.stage === 'BANK_QUERY') {
+        await this.prisma.financeCase.update({ where: { id: bankQuery.financeCaseId }, data: { stage: 'QUERY_RESOLVED' } });
+        await this.prisma.financeStatusHistory.create({
+          data: { financeCaseId: bankQuery.financeCaseId, fromStage: 'BANK_QUERY', toStage: 'QUERY_RESOLVED', changedBy: resolvedBy },
+        });
+        await this.prisma.lead.update({ where: { id: financeCase.leadId }, data: { financeStatus: 'QUERY_RESOLVED' } });
+      }
+    }
+
+    await this.auditLogs.logAction(resolvedBy, 'BankQuery', id, 'BANK_QUERY_RESOLVED', undefined, { resolutionNotes });
+    return updated;
+  }
 }
