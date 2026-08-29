@@ -36,7 +36,7 @@ export class ReportsService {
       if (l.brand?.name) byBrand[l.brand.name] = (byBrand[l.brand.name] || 0) + 1;
       if (l.isLost) {
         lostCount++;
-        const reason = l.lostReason?.name || 'Not specified';
+        const reason = l.lostReason?.label || 'Not specified';
         byLostReason[reason] = (byLostReason[reason] || 0) + 1;
       }
       if (l.isHold) holdCount++;
