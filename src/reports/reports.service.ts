@@ -18,7 +18,7 @@ export class ReportsService {
     const createdAt = dateFilter(from, to);
     const leads = await this.prisma.lead.findMany({
       where: createdAt ? { createdAt } : undefined,
-      select: { salesStatus: true, isLost: true, isHold: true, source: true, lostReasonId: true, brandId: true, modelId: true, createdAt: true, brand: { select: { name: true } }, model: { select: { name: true } }, lostReason: { select: { name: true } } },
+      include: { brand: true, model: true, lostReason: true },
     });
 
     const byStage: Record<string, number> = {};
@@ -62,11 +62,10 @@ export class ReportsService {
     const createdAt = dateFilter(from, to);
     const leads = await this.prisma.lead.findMany({
       where: { financeRequired: true, ...(createdAt ? { createdAt } : {}) },
-      select: { financeStatus: true },
     });
     const cases = await this.prisma.financeCase.findMany({
       where: createdAt ? { createdAt } : undefined,
-      select: { loanAmount: true, stage: true, bank: { select: { name: true } } },
+      include: { bank: true },
     });
 
     const byStage: Record<string, number> = {};
@@ -111,14 +110,7 @@ export class ReportsService {
     const createdAt = dateFilter(from, to);
     const leads = await this.prisma.lead.findMany({
       where: { dealerId: { not: null }, ...(createdAt ? { createdAt } : {}) },
-      select: {
-        salesStatus: true,
-        isLost: true,
-        dealerId: true,
-        dealerExecutiveId: true,
-        dealer: { select: { name: true } },
-        dealerExecutive: { select: { name: true } },
-      },
+      include: { dealer: true, dealerExecutive: true },
     });
 
     const byDealer: Record<string, { dealerName: string; total: number; closed: number; lost: number; conversionRate: number }> = {};
@@ -158,19 +150,7 @@ export class ReportsService {
     const createdAt = dateFilter(from, to);
     const leads = await this.prisma.lead.findMany({
       where: createdAt ? { createdAt } : undefined,
-      select: {
-        leadCode: true,
-        customer: { select: { name: true, mobile: true, city: true } },
-        brand: { select: { name: true } },
-        model: { select: { name: true } },
-        salesStatus: true,
-        financeStatus: true,
-        source: true,
-        budget: true,
-        dealer: { select: { name: true } },
-        dealerExecutive: { select: { name: true } },
-        createdAt: true,
-      },
+      include: { customer: true, brand: true, model: true, dealer: true, dealerExecutive: true },
       orderBy: { createdAt: 'desc' },
     });
 
