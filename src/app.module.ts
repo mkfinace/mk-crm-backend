@@ -20,6 +20,7 @@ import { AuditLogsModule } from './auditlogs/auditlogs.module';
 import { DynamicFieldsModule } from './dynamic-fields/dynamic-fields.module';
 import { VehiclesModule } from './vehicles/vehicles.module';
 import { SiteSettingsModule } from './site-settings/site-settings.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { SiteSettingsModule } from './site-settings/site-settings.module';
     DynamicFieldsModule,
     VehiclesModule,
     SiteSettingsModule,
+    ReportsModule,
   ],
   controllers: [AppController],
 })
