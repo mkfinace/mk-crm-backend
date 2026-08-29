@@ -116,4 +116,21 @@ export class FinanceCasesService {
     await this.auditLogs.logAction(changedBy, 'FinanceCase', id, 'FINANCE_STAGE_UPDATED', { stage: financeCase.stage }, { stage });
     return updated;
   }
+
+  // Editing case details is only allowed while the case is still open — once
+  // it reaches the final stage, the numbers are locked for the record.
+  async updateDetails(
+    id: string,
+    data: { loanAmount?: number; downPayment?: number; tenureMonths?: number; roi?: number; emi?: number; processingFee?: number; otherChargesJson?: string },
+    changedBy: string,
+  ) {
+    const financeCase = await this.prisma.financeCase.findUnique({ where: { id } });
+    if (!financeCase) throw new NotFoundException('Finance case not found.');
+    if (financeCase.stage === 'FINANCE_COMPLETED') {
+      throw new BadRequestException('This finance case is closed and can no longer be edited.');
+    }
+    const updated = await this.prisma.financeCase.update({ where: { id }, data });
+    await this.auditLogs.logAction(changedBy, 'FinanceCase', id, 'FINANCE_CASE_DETAILS_UPDATED', undefined, data);
+    return updated;
+  }
 }

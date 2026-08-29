@@ -34,6 +34,14 @@ export class FinanceCasesController {
     return this.financeCasesService.updateStage(id, data.stage, data.changedBy, data.notes);
   }
 
+  // Editing the numbers themselves (not just stage) — finance-side only,
+  // and only while the case is still open (service enforces the lock).
+  @Roles('SUPER_ADMIN', 'FINANCE_ADMIN', 'FINANCE_EXECUTIVE')
+  @Put(':id/details')
+  updateDetails(@Param('id') id: string, @Body() data: any, @Req() req: any) {
+    return this.financeCasesService.updateDetails(id, data, req.user.sub);
+  }
+
   // Admin sign-off on a Dealer-submitted finance case before it becomes active.
   @Roles('SUPER_ADMIN', 'FINANCE_ADMIN')
   @Put(':id/approve')
