@@ -39,6 +39,14 @@ const MIGRATIONS: { name: string; sql: string }[] = [
     name: 'site_setting_key_unique_index',
     sql: `CREATE UNIQUE INDEX IF NOT EXISTS "SiteSetting_key_key" ON "SiteSetting"("key");`,
   },
+  {
+    name: 'message_sender_nullable_and_customer_sender',
+    sql: `ALTER TABLE "Message" ALTER COLUMN "senderUserId" DROP NOT NULL;`,
+  },
+  {
+    name: 'message_sender_customer_id_column',
+    sql: `ALTER TABLE "Message" ADD COLUMN IF NOT EXISTS "senderCustomerId" TEXT;`,
+  },
 ];
 
 @Injectable()

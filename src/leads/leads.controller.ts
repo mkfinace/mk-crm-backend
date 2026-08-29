@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { LeadsService } from './leads.service';
 import { AddFollowUpDto, AssignLeadDto, CreateLeadDto, UpdateFinanceStatusDto, UpdateLeadDto, UpdateSalesStatusDto } from './leads.dto';
@@ -16,6 +16,30 @@ export class LeadsController {
   @Post()
   createLead(@Body() data: CreateLeadDto) {
     return this.leadsService.createLead(data);
+  }
+
+  // ---- Customer Portal (self-service, own leads only) ----
+  // Registered before the ':id' routes below so "my" doesn't get swallowed
+  // as an :id parameter.
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('CUSTOMER')
+  @Get('my')
+  listMyLeads(@Req() req: any) {
+    return this.leadsService.listMyLeads(req.user.sub);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('CUSTOMER')
+  @Get('my/:id')
+  getMyLead(@Req() req: any, @Param('id') id: string) {
+    return this.leadsService.getMyLead(req.user.sub, id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('CUSTOMER')
+  @Post('my/:id/messages')
+  addMyMessage(@Req() req: any, @Param('id') id: string, @Body('body') body: string) {
+    return this.leadsService.addMyMessage(req.user.sub, id, body);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

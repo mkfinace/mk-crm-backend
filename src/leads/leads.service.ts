@@ -281,4 +281,64 @@ export class LeadsService {
       data: { leadId, userId, action, metaJson: meta ? JSON.stringify(meta) : undefined },
     });
   }
+
+  // ==================== CUSTOMER PORTAL (customer-facing, self-service) ====================
+  // Deliberately excludes internal-only data (FollowUp notes, Activity log,
+  // dealer/finance-executive assignment, internal document verifiedBy) —
+  // customers only see what's relevant to their own purchase/finance journey.
+
+  listMyLeads(customerId: string) {
+    return this.prisma.lead.findMany({
+      where: { customerId },
+      select: {
+        id: true,
+        leadCode: true,
+        salesStatus: true,
+        financeStatus: true,
+        createdAt: true,
+        brand: { select: { name: true } },
+        model: { select: { name: true } },
+        variant: { select: { name: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async getMyLead(customerId: string, leadId: string) {
+    const lead = await this.prisma.lead.findUnique({
+      where: { id: leadId },
+      include: {
+        brand: true,
+        model: true,
+        variant: true,
+        dealer: { select: { name: true, phone: true, address: true, city: true } },
+        quotations: { orderBy: { createdAt: 'desc' } },
+        testDrives: { orderBy: { scheduledAt: 'desc' } },
+        documents: {
+          select: { id: true, type: true, status: true, rejectionReason: true, createdAt: true },
+          orderBy: { createdAt: 'desc' },
+        },
+        financeCase: {
+          select: { bank: { select: { name: true } }, loanAmount: true, downPayment: true, tenureMonths: true, roi: true, emi: true, stage: true, createdAt: true },
+        },
+        booking: true,
+        delivery: true,
+        messages: {
+          where: { customerVisible: true },
+          select: { id: true, body: true, createdAt: true, senderCustomerId: true, sender: { select: { name: true, role: true } } },
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    });
+    if (!lead || lead.customerId !== customerId) throw new NotFoundException('Lead not found.');
+    return lead;
+  }
+
+  async addMyMessage(customerId: string, leadId: string, body: string) {
+    const lead = await this.prisma.lead.findUnique({ where: { id: leadId } });
+    if (!lead || lead.customerId !== customerId) throw new NotFoundException('Lead not found.');
+    return this.prisma.message.create({
+      data: { leadId, senderCustomerId: customerId, body, customerVisible: true },
+    });
+  }
 }

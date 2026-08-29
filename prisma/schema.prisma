@@ -216,6 +216,7 @@ model Customer {
   createdAt  DateTime @default(now())
 
   leads Lead[]
+  messages Message[]
 }
 
 model LostReason {
@@ -506,8 +507,10 @@ model Message {
   id              String   @id @default(cuid())
   leadId          String
   lead            Lead     @relation(fields: [leadId], references: [id])
-  senderUserId    String
-  sender          User     @relation("MessageSender", fields: [senderUserId], references: [id])
+  senderUserId    String?
+  sender          User?    @relation("MessageSender", fields: [senderUserId], references: [id])
+  senderCustomerId String?
+  senderCustomer  Customer? @relation(fields: [senderCustomerId], references: [id])
   recipientUserId String?
   body            String
   customerVisible Boolean  @default(false)
