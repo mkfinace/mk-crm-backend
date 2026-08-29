@@ -44,6 +44,17 @@ export class LeadsService {
     financeRequired?: boolean;
     expectedPurchaseDate?: string;
     source?: string;
+    temperature?: string;
+    purpose?: string;
+    decisionMaker?: string;
+    currentCar?: string;
+    exchangeValue?: number;
+    customerPriority?: string;
+    fuelPreference?: string;
+    transmissionPreference?: string;
+    colourPreference?: string;
+    specialRequirements?: string;
+    customerNotes?: string;
   }) {
     let customer = await this.prisma.customer.findUnique({ where: { mobile: data.customerMobile } });
     if (!customer) {
@@ -73,6 +84,17 @@ export class LeadsService {
         expectedPurchaseDate: data.expectedPurchaseDate ? new Date(data.expectedPurchaseDate) : undefined,
         source: data.source || 'WEBSITE',
         financeStatus: data.financeRequired ? 'PENDING' : 'NOT_REQUIRED',
+        temperature: data.temperature || 'WARM',
+        purpose: data.purpose,
+        decisionMaker: data.decisionMaker,
+        currentCar: data.currentCar,
+        exchangeValue: data.exchangeValue,
+        customerPriority: data.customerPriority,
+        fuelPreference: data.fuelPreference,
+        transmissionPreference: data.transmissionPreference,
+        colourPreference: data.colourPreference,
+        specialRequirements: data.specialRequirements,
+        customerNotes: data.customerNotes,
       },
       include: { customer: true, brand: true, model: true, variant: true },
     });
@@ -119,6 +141,17 @@ export class LeadsService {
     financeRequired?: boolean;
     expectedPurchaseDate?: string;
     source?: string;
+    temperature?: string;
+    purpose?: string;
+    decisionMaker?: string;
+    currentCar?: string;
+    exchangeValue?: number;
+    customerPriority?: string;
+    fuelPreference?: string;
+    transmissionPreference?: string;
+    colourPreference?: string;
+    specialRequirements?: string;
+    customerNotes?: string;
   }) {
     const lead = await this.prisma.lead.findUnique({ where: { id } });
     if (!lead) throw new NotFoundException('Lead not found.');
@@ -144,6 +177,17 @@ export class LeadsService {
         financeRequired: data.financeRequired,
         expectedPurchaseDate: data.expectedPurchaseDate ? new Date(data.expectedPurchaseDate) : undefined,
         source: data.source,
+        temperature: data.temperature,
+        purpose: data.purpose,
+        decisionMaker: data.decisionMaker,
+        currentCar: data.currentCar,
+        exchangeValue: data.exchangeValue,
+        customerPriority: data.customerPriority,
+        fuelPreference: data.fuelPreference,
+        transmissionPreference: data.transmissionPreference,
+        colourPreference: data.colourPreference,
+        specialRequirements: data.specialRequirements,
+        customerNotes: data.customerNotes,
       },
       include: { customer: true, brand: true, model: true, variant: true },
     });
@@ -294,6 +338,41 @@ export class LeadsService {
     return this.prisma.activity.create({
       data: { leadId, userId, action, metaJson: meta ? JSON.stringify(meta) : undefined },
     });
+  }
+
+  // ==================== FOLLOW-UP DASHBOARD (Phase A) ====================
+  // Returns each open lead's most recently logged follow-up (i.e. the
+  // currently-scheduled next follow-up) so the frontend can bucket into
+  // Due Today / Overdue / Upcoming / No Follow-up Scheduled.
+  async getFollowUpDashboard(filters: { dealerExecutiveId?: string; financeExecutiveId?: string }) {
+    const leads = await this.prisma.lead.findMany({
+      where: {
+        isLost: false,
+        salesStatus: { notIn: ['CLOSED'] },
+        ...(filters.dealerExecutiveId ? { dealerExecutiveId: filters.dealerExecutiveId } : {}),
+        ...(filters.financeExecutiveId ? { financeExecutiveId: filters.financeExecutiveId } : {}),
+      },
+      include: {
+        customer: { select: { name: true, mobile: true } },
+        brand: { select: { name: true } },
+        model: { select: { name: true } },
+        followUps: { orderBy: { createdAt: 'desc' }, take: 1 },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return leads.map((l) => ({
+      id: l.id,
+      leadCode: l.leadCode,
+      customerName: l.customer.name,
+      customerMobile: l.customer.mobile,
+      brand: l.brand?.name,
+      model: l.model?.name,
+      salesStatus: l.salesStatus,
+      temperature: l.temperature,
+      nextFollowUpAt: l.followUps[0]?.nextFollowUpAt || null,
+      lastFollowUpResult: l.followUps[0]?.result || null,
+    }));
   }
 
   // ==================== CUSTOMER PORTAL (customer-facing, self-service) ====================

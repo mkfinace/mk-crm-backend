@@ -51,6 +51,62 @@ export class CreateLeadDto {
   @IsString()
   @IsOptional()
   source?: string;
+
+  // ---- Phase A: Customer Qualification + Lead Temperature ----
+  @ApiPropertyOptional({ example: 'WARM', description: 'HOT, WARM, COLD' })
+  @IsString()
+  @IsOptional()
+  temperature?: string;
+
+  @ApiPropertyOptional({ example: 'Family', description: 'Family, Personal, Business, Other' })
+  @IsString()
+  @IsOptional()
+  purpose?: string;
+
+  @ApiPropertyOptional({ example: 'Self' })
+  @IsString()
+  @IsOptional()
+  decisionMaker?: string;
+
+  @ApiPropertyOptional({ example: 'Maruti Alto 2015' })
+  @IsString()
+  @IsOptional()
+  currentCar?: string;
+
+  @ApiPropertyOptional({ example: 150000 })
+  @IsNumber()
+  @IsOptional()
+  exchangeValue?: number;
+
+  @ApiPropertyOptional({ example: 'Price', description: 'Price, Features, Mileage, Safety, Performance, DeliveryTime, Colour' })
+  @IsString()
+  @IsOptional()
+  customerPriority?: string;
+
+  @ApiPropertyOptional({ example: 'Petrol' })
+  @IsString()
+  @IsOptional()
+  fuelPreference?: string;
+
+  @ApiPropertyOptional({ example: 'Automatic' })
+  @IsString()
+  @IsOptional()
+  transmissionPreference?: string;
+
+  @ApiPropertyOptional({ example: 'White' })
+  @IsString()
+  @IsOptional()
+  colourPreference?: string;
+
+  @ApiPropertyOptional({ example: 'Needs a wheelchair-accessible boot' })
+  @IsString()
+  @IsOptional()
+  specialRequirements?: string;
+
+  @ApiPropertyOptional({ example: 'Very price-sensitive, compares with Hyundai a lot' })
+  @IsString()
+  @IsOptional()
+  customerNotes?: string;
 }
 
 export class UpdateLeadDto extends PartialType(CreateLeadDto) {}

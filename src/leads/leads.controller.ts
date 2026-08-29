@@ -42,6 +42,17 @@ export class LeadsController {
     return this.leadsService.addMyMessage(req.user.sub, id, body);
   }
 
+  // Registered before ':id' for the same reason as the 'my' routes above.
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...STAFF_ROLES)
+  @Get('follow-ups/dashboard')
+  getFollowUpDashboard(
+    @Query('dealerExecutiveId') dealerExecutiveId?: string,
+    @Query('financeExecutiveId') financeExecutiveId?: string,
+  ) {
+    return this.leadsService.getFollowUpDashboard({ dealerExecutiveId, financeExecutiveId });
+  }
+
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(...STAFF_ROLES)
   @Get()

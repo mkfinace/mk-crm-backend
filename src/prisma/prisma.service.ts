@@ -59,6 +59,50 @@ const MIGRATIONS: { name: string; sql: string }[] = [
     name: 'dealer_bank_unique_index',
     sql: `CREATE UNIQUE INDEX IF NOT EXISTS "DealerBank_dealerId_bankId_key" ON "DealerBank"("dealerId", "bankId");`,
   },
+  {
+    name: 'lead_qualification_fields',
+    sql: `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "temperature" TEXT NOT NULL DEFAULT 'WARM';`,
+  },
+  {
+    name: 'lead_purpose_field',
+    sql: `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "purpose" TEXT;`,
+  },
+  {
+    name: 'lead_decision_maker_field',
+    sql: `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "decisionMaker" TEXT;`,
+  },
+  {
+    name: 'lead_current_car_field',
+    sql: `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "currentCar" TEXT;`,
+  },
+  {
+    name: 'lead_exchange_value_field',
+    sql: `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "exchangeValue" DOUBLE PRECISION;`,
+  },
+  {
+    name: 'lead_customer_priority_field',
+    sql: `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "customerPriority" TEXT;`,
+  },
+  {
+    name: 'lead_fuel_preference_field',
+    sql: `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "fuelPreference" TEXT;`,
+  },
+  {
+    name: 'lead_transmission_preference_field',
+    sql: `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "transmissionPreference" TEXT;`,
+  },
+  {
+    name: 'lead_colour_preference_field',
+    sql: `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "colourPreference" TEXT;`,
+  },
+  {
+    name: 'lead_special_requirements_field',
+    sql: `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "specialRequirements" TEXT;`,
+  },
+  {
+    name: 'lead_customer_notes_field',
+    sql: `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "customerNotes" TEXT;`,
+  },
 ];
 
 @Injectable()

@@ -271,6 +271,19 @@ model Lead {
   lostReasonId          String?
   lostReason            LostReason? @relation(fields: [lostReasonId], references: [id])
 
+  // ---- Phase A: Customer Qualification + Lead Temperature ----
+  temperature           String  @default("WARM") // HOT, WARM, COLD — staff-set, no auto-scoring
+  purpose               String? // Family, Personal, Business, Other
+  decisionMaker         String?
+  currentCar            String?
+  exchangeValue         Float?
+  customerPriority      String? // Price, Features, Mileage, Safety, Performance, DeliveryTime, Colour
+  fuelPreference        String?
+  transmissionPreference String?
+  colourPreference      String?
+  specialRequirements   String?
+  customerNotes         String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
