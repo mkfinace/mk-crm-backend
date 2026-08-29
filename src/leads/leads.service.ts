@@ -120,10 +120,11 @@ export class LeadsService {
         dealerExecutive: { select: { id: true, name: true, mobile: true, role: true } },
         financeExecutive: { select: { id: true, name: true, mobile: true, role: true } },
         bank: true,
-        followUps: { orderBy: { createdAt: 'desc' } },
-        activities: { orderBy: { createdAt: 'desc' } },
+        followUps: { orderBy: { createdAt: 'desc' }, include: { user: { select: { name: true } } } },
+        activities: { orderBy: { createdAt: 'desc' }, include: { user: { select: { name: true } } } },
         quotations: true, testDrives: true, documents: true,
-        financeCase: true, booking: true, delivery: true,
+        financeCase: { include: { statusHistory: { orderBy: { createdAt: 'asc' } } } },
+        booking: true, delivery: true,
       },
     });
     if (!lead) throw new NotFoundException('Lead not found.');
