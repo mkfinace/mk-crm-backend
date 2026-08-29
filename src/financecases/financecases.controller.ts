@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { FinanceCasesService } from './financecases.service';
 import { CreateFinanceCaseDto, UpdateFinanceCaseStageDto } from './financecases.dto';
@@ -15,8 +15,8 @@ export class FinanceCasesController {
   constructor(private financeCasesService: FinanceCasesService) {}
 
   @Post()
-  createFinanceCase(@Body() data: CreateFinanceCaseDto) {
-    return this.financeCasesService.createFinanceCase(data);
+  createFinanceCase(@Body() data: CreateFinanceCaseDto, @Req() req: any) {
+    return this.financeCasesService.createFinanceCase(data, req.user.role);
   }
 
   @Get()
@@ -32,5 +32,12 @@ export class FinanceCasesController {
   @Put(':id/stage')
   updateStage(@Param('id') id: string, @Body() data: UpdateFinanceCaseStageDto) {
     return this.financeCasesService.updateStage(id, data.stage, data.changedBy, data.notes);
+  }
+
+  // Admin sign-off on a Dealer-submitted finance case before it becomes active.
+  @Roles('SUPER_ADMIN', 'FINANCE_ADMIN')
+  @Put(':id/approve')
+  approve(@Param('id') id: string, @Req() req: any) {
+    return this.financeCasesService.approveFinanceCase(id, req.user.sub);
   }
 }

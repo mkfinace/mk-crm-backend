@@ -58,4 +58,18 @@ export class DealersController {
   assignExecutive(@Param('id') id: string, @Body() data: AssignDealerExecutiveDto) {
     return this.dealersService.assignExecutive(id, data.userId, data.branchId);
   }
+
+  // Bank tie-ups — GET open to any staff (a Dealer Executive needs to see
+  // which banks they can use); PUT is Admin-only (this is a business
+  // decision, not something the dealer side self-manages).
+  @Get(':id/banks')
+  getDealerBanks(@Param('id') id: string) {
+    return this.dealersService.getDealerBanks(id);
+  }
+
+  @Roles('SUPER_ADMIN', 'FINANCE_ADMIN')
+  @Put(':id/banks')
+  setDealerBanks(@Param('id') id: string, @Body('bankIds') bankIds: string[]) {
+    return this.dealersService.setDealerBanks(id, bankIds || []);
+  }
 }

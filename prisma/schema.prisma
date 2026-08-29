@@ -303,6 +303,17 @@ model Dealer {
   executives DealerExecutive[]
   users      User[]
   leads      Lead[]
+  dealerBanks DealerBank[]
+}
+
+model DealerBank {
+  id       String @id @default(cuid())
+  dealerId String
+  dealer   Dealer @relation(fields: [dealerId], references: [id])
+  bankId   String
+  bank     Bank   @relation(fields: [bankId], references: [id])
+
+  @@unique([dealerId, bankId])
 }
 
 model DealerBranch {
@@ -348,6 +359,7 @@ model Bank {
   users      User[]
   leads      Lead[]
   financeCases FinanceCase[]
+  dealerBanks DealerBank[]
 }
 
 model BankBranch {

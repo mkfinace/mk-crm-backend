@@ -70,4 +70,22 @@ export class DealersService {
     if (!user) throw new NotFoundException('User not found.');
     return this.prisma.dealerExecutive.create({ data: { dealerId, userId, branchId } });
   }
+
+  // ---- Bank tie-ups — which banks a dealer's finance cases are restricted
+  // to. Admin decides this; the lead's Finance Case bank dropdown then only
+  // offers these banks (falls back to "all banks" if none configured yet).
+  async getDealerBanks(dealerId: string) {
+    const rows = await this.prisma.dealerBank.findMany({ where: { dealerId }, include: { bank: true } });
+    return rows.map((r) => r.bank);
+  }
+
+  async setDealerBanks(dealerId: string, bankIds: string[]) {
+    const dealer = await this.prisma.dealer.findUnique({ where: { id: dealerId } });
+    if (!dealer) throw new NotFoundException('Dealer not found.');
+    await this.prisma.dealerBank.deleteMany({ where: { dealerId } });
+    if (bankIds.length > 0) {
+      await this.prisma.dealerBank.createMany({ data: bankIds.map((bankId) => ({ dealerId, bankId })) });
+    }
+    return this.getDealerBanks(dealerId);
+  }
 }

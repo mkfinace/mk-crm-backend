@@ -47,6 +47,18 @@ const MIGRATIONS: { name: string; sql: string }[] = [
     name: 'message_sender_customer_id_column',
     sql: `ALTER TABLE "Message" ADD COLUMN IF NOT EXISTS "senderCustomerId" TEXT;`,
   },
+  {
+    name: 'dealer_bank_tie_up_table',
+    sql: `CREATE TABLE IF NOT EXISTS "DealerBank" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "dealerId" TEXT NOT NULL,
+      "bankId" TEXT NOT NULL
+    );`,
+  },
+  {
+    name: 'dealer_bank_unique_index',
+    sql: `CREATE UNIQUE INDEX IF NOT EXISTS "DealerBank_dealerId_bankId_key" ON "DealerBank"("dealerId", "bankId");`,
+  },
 ];
 
 @Injectable()
