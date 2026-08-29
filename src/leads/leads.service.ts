@@ -50,6 +50,13 @@ export class LeadsService {
       customer = await this.prisma.customer.create({
         data: { name: data.customerName, mobile: data.customerMobile, city: data.city },
       });
+    } else if (data.customerName && (data.customerName !== customer.name || (data.city && data.city !== customer.city))) {
+      // Same mobile enquiring again — keep the customer record's name/city
+      // current rather than freezing it at whatever was typed the first time.
+      customer = await this.prisma.customer.update({
+        where: { id: customer.id },
+        data: { name: data.customerName, city: data.city || customer.city },
+      });
     }
 
     const leadCode = await this.generateLeadCode();
