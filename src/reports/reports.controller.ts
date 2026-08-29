@@ -1,6 +1,5 @@
-import { Controller, Get, Query, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, Header, Query, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Response } from 'express';
 import { ReportsService } from './reports.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -31,10 +30,9 @@ export class ReportsController {
   }
 
   @Get('export')
-  async export(@Query('from') from: string, @Query('to') to: string, @Res() res: Response) {
-    const csv = await this.reports.exportLeadsCsv(from, to);
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename="leads-export-${new Date().toISOString().slice(0, 10)}.csv"`);
-    res.send(csv);
+  @Header('Content-Type', 'text/csv')
+  @Header('Content-Disposition', 'attachment; filename="leads-export.csv"')
+  export(@Query('from') from?: string, @Query('to') to?: string) {
+    return this.reports.exportLeadsCsv(from, to);
   }
 }
