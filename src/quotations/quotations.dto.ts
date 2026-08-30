@@ -94,4 +94,9 @@ export class CreateQuotationDto {
   @IsNumber()
   @IsOptional()
   crtmCharges?: number;
+
+  @ApiPropertyOptional({ example: 2500, description: 'Road Side Assistance' })
+  @IsNumber()
+  @IsOptional()
+  rsa?: number;
 }

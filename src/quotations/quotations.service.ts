@@ -25,6 +25,7 @@ export class QuotationsService {
     extraWarranty?: number;
     fastag?: number;
     crtmCharges?: number;
+    rsa?: number;
   }) {
     const lead = await this.prisma.lead.findUnique({ where: { id: data.leadId } });
     if (!lead) throw new NotFoundException('Lead not found.');
@@ -55,6 +56,7 @@ export class QuotationsService {
         extraWarranty: data.extraWarranty,
         fastag: data.fastag,
         crtmCharges: data.crtmCharges,
+        rsa: data.rsa,
       },
     });
   }

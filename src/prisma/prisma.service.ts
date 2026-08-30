@@ -121,6 +121,7 @@ const MIGRATIONS: { name: string; sql: string }[] = [
   { name: 'quotation_crtm_charges_field', sql: `ALTER TABLE "Quotation" ADD COLUMN IF NOT EXISTS "crtmCharges" DOUBLE PRECISION;` },
   { name: 'document_person_type_field', sql: `ALTER TABLE "Document" ADD COLUMN IF NOT EXISTS "personType" TEXT NOT NULL DEFAULT 'APPLICANT';` },
   { name: 'document_person_name_field', sql: `ALTER TABLE "Document" ADD COLUMN IF NOT EXISTS "personName" TEXT;` },
+  { name: 'quotation_rsa_field', sql: `ALTER TABLE "Quotation" ADD COLUMN IF NOT EXISTS "rsa" DOUBLE PRECISION;` },
   // ---- Phase B: Negotiation table ----
   {
     name: 'negotiation_table',
