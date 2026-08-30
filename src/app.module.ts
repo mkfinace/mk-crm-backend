@@ -27,6 +27,7 @@ import { RealtimeModule } from './realtime/realtime.module';
 import { PermissionsModule } from './permissions/permissions.module';
 import { FeaturesModule } from './features/features.module';
 import { ColoursModule } from './colours/colours.module';
+import { PricingModule } from './pricing/pricing.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { ColoursModule } from './colours/colours.module';
     VehiclesModule,
     FeaturesModule,
     ColoursModule,
+    PricingModule,
     SiteSettingsModule,
     ReportsModule,
     NegotiationsModule,

@@ -276,6 +276,23 @@ const MIGRATIONS: { name: string; sql: string }[] = [
     );`,
   },
   { name: 'vehicle_colour_unique_index', sql: `CREATE UNIQUE INDEX IF NOT EXISTS "VehicleColour_vehicleId_colourId_key" ON "VehicleColour"("vehicleId", "colourId");` },
+  // ---- City / Dealer-wise pricing ----
+  {
+    name: 'variant_price_table',
+    sql: `CREATE TABLE IF NOT EXISTS "VariantPrice" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "variantId" TEXT NOT NULL,
+      "dealerId" TEXT,
+      "city" TEXT,
+      "exShowroomPrice" DOUBLE PRECISION NOT NULL,
+      "rtoCharges" DOUBLE PRECISION,
+      "insuranceCharges" DOUBLE PRECISION,
+      "effectiveFrom" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "createdBy" TEXT,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );`,
+  },
+  { name: 'variant_price_variant_index', sql: `CREATE INDEX IF NOT EXISTS "VariantPrice_variantId_idx" ON "VariantPrice"("variantId");` },
 ];
 
 @Injectable()
