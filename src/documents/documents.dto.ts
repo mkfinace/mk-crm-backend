@@ -21,6 +21,16 @@ export class CreateDocumentDto {
   @IsString()
   @IsNotEmpty()
   uploadedBy: string;
+
+  @ApiPropertyOptional({ example: 'APPLICANT', description: 'APPLICANT, CO_APPLICANT, or GUARANTOR' })
+  @IsString()
+  @IsOptional()
+  personType?: string;
+
+  @ApiPropertyOptional({ example: 'Priya Patel', description: 'Name label — useful when there are multiple co-applicants/guarantors' })
+  @IsString()
+  @IsOptional()
+  personName?: string;
 }
 
 export class VerifyDocumentDto {

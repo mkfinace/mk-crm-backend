@@ -7,7 +7,7 @@ const VALID_STATUSES = ['VERIFIED', 'REJECTED'];
 export class DocumentsService {
   constructor(private prisma: PrismaService) {}
 
-  async createDocument(data: { leadId: string; type: string; fileUrl: string; uploadedBy: string }) {
+  async createDocument(data: { leadId: string; type: string; fileUrl: string; uploadedBy: string; personType?: string; personName?: string }) {
     const lead = await this.prisma.lead.findUnique({ where: { id: data.leadId } });
     if (!lead) throw new NotFoundException('Lead not found.');
     return this.prisma.document.create({
@@ -17,6 +17,8 @@ export class DocumentsService {
         fileUrl: data.fileUrl,
         uploadedBy: data.uploadedBy,
         status: 'UPLOADED',
+        personType: data.personType || 'APPLICANT',
+        personName: data.personName,
       },
     });
   }

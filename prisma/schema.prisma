@@ -507,6 +507,11 @@ model Document {
   uploadedBy       String
   verifiedBy       String?
   createdAt        DateTime  @default(now())
+
+  // ---- Whose document this is — a finance case may need docs from the
+  // applicant AND a co-applicant AND a guarantor, each kept distinct.
+  personType String  @default("APPLICANT") // APPLICANT, CO_APPLICANT, GUARANTOR
+  personName String? // e.g. "Priya Patel" — lets you tell multiple co-applicants/guarantors apart
 }
 
 model FinanceCase {
