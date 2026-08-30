@@ -7,14 +7,13 @@ import {
   SetFieldValueDto,
 } from './dynamic-fields.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { RolesGuard } from '../auth/roles.guard';
-import { Roles } from '../auth/roles.decorator';
-import { ADMIN_ROLES } from '../auth/role-groups';
+import { PermissionsGuard } from '../permissions/permissions.guard';
+import { RequirePermission } from '../permissions/permissions.decorator';
 
 @ApiTags('dynamic-fields')
 @Controller()
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(...ADMIN_ROLES)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
+@RequirePermission('dynamic_fields.manage')
 export class DynamicFieldsController {
   constructor(private service: DynamicFieldsService) {}
 

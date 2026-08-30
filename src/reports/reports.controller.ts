@@ -3,15 +3,13 @@ import { ApiTags } from '@nestjs/swagger';
 import { ReportsService } from './reports.service';
 import { DealersService } from '../dealers/dealers.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { RolesGuard } from '../auth/roles.guard';
-import { Roles } from '../auth/roles.decorator';
-
-const REPORT_ROLES = ['SUPER_ADMIN', 'SALES_ADMIN', 'FINANCE_ADMIN', 'DEALER_MANAGER'];
+import { PermissionsGuard } from '../permissions/permissions.guard';
+import { RequirePermission } from '../permissions/permissions.decorator';
 
 @ApiTags('reports')
 @Controller('reports')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(...REPORT_ROLES)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
+@RequirePermission('reports.view')
 export class ReportsController {
   constructor(private reports: ReportsService, private dealers: DealersService) {}
 

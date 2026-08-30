@@ -4,9 +4,12 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from './users.service';
 import { CreateUserDto, LoginDto, UpdateUserDto } from './users.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { RolesGuard } from '../auth/roles.guard';
-import { Roles } from '../auth/roles.decorator';
+import { PermissionsGuard } from '../permissions/permissions.guard';
+import { RequirePermission } from '../permissions/permissions.decorator';
 
+// IMPORTANT: no class-level guard — login and forgot-password below are
+// deliberately public (they're how you get a token in the first place)
+// and must never pick up a controller-wide guard.
 @ApiTags('users')
 @Controller('users')
 export class UsersController {
@@ -15,38 +18,39 @@ export class UsersController {
     private jwt: JwtService,
   ) {}
 
-  // Staff/admin account management — Super Admin only. Creating a new admin
-  // account is exactly the kind of action that must not be publicly callable.
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('SUPER_ADMIN')
+  // Staff/admin account management — Super Admin only by default. Creating
+  // a new admin account is exactly the kind of action that must not be
+  // publicly callable.
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermission('users.manage')
   @Post()
   createUser(@Body() data: CreateUserDto) {
     return this.usersService.createUser(data);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('SUPER_ADMIN')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermission('users.manage')
   @Get()
   listUsers(@Query('role') role?: string) {
     return this.usersService.listUsers(role);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('SUPER_ADMIN')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermission('users.manage')
   @Put(':id')
   updateUser(@Param('id') id: string, @Body() data: UpdateUserDto) {
     return this.usersService.updateUser(id, data);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('SUPER_ADMIN')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermission('users.manage')
   @Put(':id/toggle-active')
   toggleActive(@Param('id') id: string) {
     return this.usersService.toggleActive(id);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('SUPER_ADMIN')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermission('users.manage')
   @Delete(':id')
   deleteUser(@Param('id') id: string) {
     return this.usersService.deleteUser(id);

@@ -21,6 +21,8 @@ const SALES_QUOTE = ['SUPER_ADMIN', 'SALES_ADMIN', 'DEALER_MANAGER', 'DEALER_EXE
 const APPROVERS = ['SUPER_ADMIN', 'SALES_ADMIN', 'DEALER_MANAGER'];
 const FINANCE = ['SUPER_ADMIN', 'FINANCE_ADMIN', 'FINANCE_EXECUTIVE'];
 const FINANCE_ADMINS = ['SUPER_ADMIN', 'FINANCE_ADMIN'];
+const ADMIN = ['SUPER_ADMIN', 'SALES_ADMIN', 'FINANCE_ADMIN'];
+const REPORT = ['SUPER_ADMIN', 'SALES_ADMIN', 'FINANCE_ADMIN', 'DEALER_MANAGER'];
 
 const DEFAULT_PERMISSIONS: { code: string; label: string; module: string; defaultRoles: string[] }[] = [
   { code: 'leads.view', label: 'View leads', module: 'Leads', defaultRoles: STAFF },
@@ -57,6 +59,31 @@ const DEFAULT_PERMISSIONS: { code: string; label: string; module: string; defaul
 
   { code: 'deliveries.view', label: 'View deliveries', module: 'Deliveries', defaultRoles: STAFF },
   { code: 'deliveries.manage', label: 'Schedule / update deliveries', module: 'Deliveries', defaultRoles: STAFF },
+
+  { code: 'dealers.view', label: 'View dealers', module: 'Dealers', defaultRoles: STAFF },
+  { code: 'dealers.manage', label: 'Create / edit dealers, branches, staff assignment', module: 'Dealers', defaultRoles: STAFF },
+  { code: 'dealers.banks_manage', label: 'Set which banks a dealer works with', module: 'Dealers', defaultRoles: FINANCE_ADMINS },
+
+  { code: 'banks.view', label: 'View banks', module: 'Banks', defaultRoles: STAFF },
+  { code: 'banks.manage', label: 'Create / edit banks, branches, staff assignment', module: 'Banks', defaultRoles: STAFF },
+
+  { code: 'catalogue.manage', label: 'Manage brands / models / variants', module: 'Catalogue', defaultRoles: ADMIN },
+
+  { code: 'dynamic_fields.manage', label: 'Manage dynamic field categories & definitions', module: 'Dynamic Fields', defaultRoles: ADMIN },
+
+  { code: 'messages.manage', label: 'Send / view team messages on a lead', module: 'Messages', defaultRoles: STAFF },
+
+  { code: 'notifications.manage', label: 'View / send / mark notifications read', module: 'Notifications', defaultRoles: STAFF },
+
+  { code: 'reports.view', label: 'View sales / finance / dealer reports', module: 'Reports', defaultRoles: REPORT },
+
+  { code: 'site_settings.manage', label: 'Edit website content settings', module: 'Site Settings', defaultRoles: ADMIN },
+
+  { code: 'users.manage', label: 'Create / edit / deactivate staff accounts', module: 'Users', defaultRoles: ['SUPER_ADMIN'] },
+
+  { code: 'vehicles.manage', label: 'Edit vehicle spec data', module: 'Vehicles', defaultRoles: ADMIN },
+
+  { code: 'audit_logs.view', label: 'View the audit log', module: 'Audit Log', defaultRoles: ADMIN },
 ];
 
 @Injectable()
