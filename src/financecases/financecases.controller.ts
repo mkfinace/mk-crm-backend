@@ -3,32 +3,34 @@ import { ApiTags } from '@nestjs/swagger';
 import { FinanceCasesService } from './financecases.service';
 import { CreateFinanceCaseDto, UpdateFinanceCaseStageDto } from './financecases.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { RolesGuard } from '../auth/roles.guard';
-import { Roles } from '../auth/roles.decorator';
-import { STAFF_ROLES } from '../auth/role-groups';
+import { PermissionsGuard } from '../permissions/permissions.guard';
+import { RequirePermission } from '../permissions/permissions.decorator';
 
 @ApiTags('finance-cases')
 @Controller('finance-cases')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(...STAFF_ROLES)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class FinanceCasesController {
   constructor(private financeCasesService: FinanceCasesService) {}
 
+  @RequirePermission('finance_cases.manage')
   @Post()
   createFinanceCase(@Body() data: CreateFinanceCaseDto, @Req() req: any) {
     return this.financeCasesService.createFinanceCase(data, req.user.role);
   }
 
+  @RequirePermission('finance_cases.view')
   @Get()
   listFinanceCases(@Query('leadId') leadId?: string) {
     return this.financeCasesService.listFinanceCases(leadId);
   }
 
+  @RequirePermission('finance_cases.view')
   @Get(':id')
   getFinanceCase(@Param('id') id: string) {
     return this.financeCasesService.getFinanceCase(id);
   }
 
+  @RequirePermission('finance_cases.manage')
   @Put(':id/stage')
   updateStage(@Param('id') id: string, @Body() data: UpdateFinanceCaseStageDto) {
     return this.financeCasesService.updateStage(id, data.stage, data.changedBy, data.notes);
@@ -36,32 +38,33 @@ export class FinanceCasesController {
 
   // Editing the numbers themselves (not just stage) — finance-side only,
   // and only while the case is still open (service enforces the lock).
-  @Roles('SUPER_ADMIN', 'FINANCE_ADMIN', 'FINANCE_EXECUTIVE')
+  @RequirePermission('finance_cases.manage_details')
   @Put(':id/details')
   updateDetails(@Param('id') id: string, @Body() data: any, @Req() req: any) {
     return this.financeCasesService.updateDetails(id, data, req.user.sub);
   }
 
   // Admin sign-off on a Dealer-submitted finance case before it becomes active.
-  @Roles('SUPER_ADMIN', 'FINANCE_ADMIN')
+  @RequirePermission('finance_cases.approve')
   @Put(':id/approve')
   approve(@Param('id') id: string, @Req() req: any) {
     return this.financeCasesService.approveFinanceCase(id, req.user.sub);
   }
 
   // ---- Phase B: structured Bank Query ----
-  @Roles('SUPER_ADMIN', 'FINANCE_ADMIN', 'FINANCE_EXECUTIVE')
+  @RequirePermission('finance_cases.bank_query.manage')
   @Post(':id/bank-queries')
   createBankQuery(@Param('id') id: string, @Body() data: { query: string; requestedDocument?: string; dueDate?: string }, @Req() req: any) {
     return this.financeCasesService.createBankQuery(id, data, req.user.sub);
   }
 
+  @RequirePermission('finance_cases.view')
   @Get(':id/bank-queries')
   listBankQueries(@Param('id') id: string) {
     return this.financeCasesService.listBankQueries(id);
   }
 
-  @Roles('SUPER_ADMIN', 'FINANCE_ADMIN', 'FINANCE_EXECUTIVE')
+  @RequirePermission('finance_cases.bank_query.manage')
   @Put(':id/bank-queries/:queryId/resolve')
   resolveBankQuery(@Param('queryId') queryId: string, @Body('resolutionNotes') resolutionNotes: string, @Req() req: any) {
     return this.financeCasesService.resolveBankQuery(queryId, resolutionNotes, req.user.sub);

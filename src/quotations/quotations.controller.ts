@@ -3,33 +3,30 @@ import { ApiTags } from '@nestjs/swagger';
 import { QuotationsService } from './quotations.service';
 import { CreateQuotationDto } from './quotations.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { RolesGuard } from '../auth/roles.guard';
-import { Roles } from '../auth/roles.decorator';
-import { STAFF_ROLES } from '../auth/role-groups';
-
-const SALES_QUOTE_ROLES = ['SUPER_ADMIN', 'SALES_ADMIN', 'DEALER_MANAGER', 'DEALER_EXECUTIVE'];
+import { PermissionsGuard } from '../permissions/permissions.guard';
+import { RequirePermission } from '../permissions/permissions.decorator';
 
 @ApiTags('quotations')
 @Controller('quotations')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(...STAFF_ROLES)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class QuotationsController {
   constructor(private quotationsService: QuotationsService) {}
 
-  @Roles(...SALES_QUOTE_ROLES)
+  @RequirePermission('quotations.manage')
   @Post()
   createQuotation(@Body() data: CreateQuotationDto, @Req() req: any) {
     return this.quotationsService.createQuotation({ ...data, createdBy: data.createdBy || req.user.sub });
   }
 
+  @RequirePermission('quotations.view')
   @Get()
   listQuotations(@Query('leadId') leadId?: string) {
     return this.quotationsService.listQuotations(leadId);
   }
 
-  @Roles(...SALES_QUOTE_ROLES)
+  @RequirePermission('quotations.manage')
   @Delete(':id')
-  deleteQuotation(@Param('id') id: string) {
-    return this.quotationsService.deleteQuotation(id);
+  deleteQuotation(@Param('id') id: string, @Req() req: any) {
+    return this.quotationsService.deleteQuotation(id, req.user.sub);
   }
 }

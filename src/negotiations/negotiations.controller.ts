@@ -3,26 +3,22 @@ import { ApiTags } from '@nestjs/swagger';
 import { NegotiationsService } from './negotiations.service';
 import { CreateNegotiationDto, DecideNegotiationDto } from './negotiations.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { RolesGuard } from '../auth/roles.guard';
-import { Roles } from '../auth/roles.decorator';
-import { STAFF_ROLES } from '../auth/role-groups';
-
-const SALES_ROLES = ['SUPER_ADMIN', 'SALES_ADMIN', 'DEALER_MANAGER', 'DEALER_EXECUTIVE'];
-const APPROVER_ROLES = ['SUPER_ADMIN', 'SALES_ADMIN', 'DEALER_MANAGER'];
+import { PermissionsGuard } from '../permissions/permissions.guard';
+import { RequirePermission } from '../permissions/permissions.decorator';
 
 @ApiTags('negotiations')
 @Controller('negotiations')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(...STAFF_ROLES)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class NegotiationsController {
   constructor(private negotiationsService: NegotiationsService) {}
 
-  @Roles(...SALES_ROLES)
+  @RequirePermission('negotiations.manage')
   @Post()
   createNegotiation(@Body() data: CreateNegotiationDto, @Req() req: any) {
     return this.negotiationsService.createNegotiation({ ...data, createdBy: req.user.sub });
   }
 
+  @RequirePermission('negotiations.view')
   @Get()
   listNegotiations(@Query('leadId') leadId?: string) {
     return this.negotiationsService.listNegotiations(leadId);
@@ -31,7 +27,7 @@ export class NegotiationsController {
   // Approving/rejecting a discount beyond the executive's limit — Dealer
   // Manager or Admin only (an executive approving their own request would
   // defeat the point of the limit).
-  @Roles(...APPROVER_ROLES)
+  @RequirePermission('negotiations.approve')
   @Put(':id/decide')
   decideApproval(@Param('id') id: string, @Body() data: DecideNegotiationDto, @Req() req: any) {
     return this.negotiationsService.decideApproval(id, data.approve, req.user.sub, data.discountApproved);

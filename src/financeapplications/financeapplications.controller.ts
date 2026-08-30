@@ -3,31 +3,28 @@ import { ApiTags } from '@nestjs/swagger';
 import { FinanceApplicationsService } from './financeapplications.service';
 import { CreateFinanceApplicationDto, UpdateFinanceApplicationStatusDto } from './financeapplications.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { RolesGuard } from '../auth/roles.guard';
-import { Roles } from '../auth/roles.decorator';
-import { STAFF_ROLES } from '../auth/role-groups';
-
-const FINANCE_ROLES = ['SUPER_ADMIN', 'FINANCE_ADMIN', 'FINANCE_EXECUTIVE'];
+import { PermissionsGuard } from '../permissions/permissions.guard';
+import { RequirePermission } from '../permissions/permissions.decorator';
 
 @ApiTags('finance-applications')
 @Controller('finance-applications')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(...STAFF_ROLES)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class FinanceApplicationsController {
   constructor(private financeApplicationsService: FinanceApplicationsService) {}
 
-  @Roles(...FINANCE_ROLES)
+  @RequirePermission('finance_applications.manage')
   @Post()
   createApplication(@Body() data: CreateFinanceApplicationDto, @Req() req: any) {
     return this.financeApplicationsService.createApplication(data, req.user.sub);
   }
 
+  @RequirePermission('finance_applications.view')
   @Get()
   listApplications(@Query('leadId') leadId: string) {
     return this.financeApplicationsService.listApplications(leadId);
   }
 
-  @Roles(...FINANCE_ROLES)
+  @RequirePermission('finance_applications.manage')
   @Put(':id/status')
   updateStatus(@Param('id') id: string, @Body() data: UpdateFinanceApplicationStatusDto, @Req() req: any) {
     return this.financeApplicationsService.updateStatus(id, data.status, data.notes, req.user.sub);
