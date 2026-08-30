@@ -117,6 +117,7 @@ model Variant {
   prices          VariantPrice[]
   offers          Offer[]
   warranty        Warranty?
+  submissions     CarDataSubmission[]
 }
 
 model Vehicle {
@@ -320,6 +321,33 @@ model Warranty {
   extendedOptionsJson String? // JSON array of {label, price} extended-warranty packages on offer
 
   updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+
+// ==================== DRAFT → APPROVE → PUBLISH WORKFLOW ====================
+// A Dealer Executive's car-data edit never goes live directly — it's stored
+// here as PENDING, and only actually applied to the real tables (FieldValue,
+// VariantFeature, VehicleColour, Warranty, ...) once an Admin approves it.
+// One generic queue for every change type, rather than a separate draft
+// column bolted onto each live table — keeps the Approval Center to one
+// screen and keeps every other module's direct-edit path (used by Admins)
+// completely untouched.
+model CarDataSubmission {
+  id        String  @id @default(cuid())
+  variantId String
+  variant   Variant @relation(fields: [variantId], references: [id])
+
+  changeType  String // FIELD_VALUES | FEATURES | COLOURS | WARRANTY
+  payloadJson String // proposed new state, same shape the live PUT endpoint for that type expects
+  summary     String? // short human-readable description of what's being proposed, for the queue list
+
+  status String @default("PENDING") // PENDING | APPROVED | REJECTED
+
+  submittedBy String
+  reviewedBy  String?
+  reviewNotes String?
+  reviewedAt  DateTime?
+
   createdAt DateTime @default(now())
 }
 

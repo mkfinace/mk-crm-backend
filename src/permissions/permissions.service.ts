@@ -70,7 +70,12 @@ const DEFAULT_PERMISSIONS: { code: string; label: string; module: string; defaul
   { code: 'catalogue.manage', label: 'Manage brands / models / variants', module: 'Catalogue', defaultRoles: ADMIN },
 
   { code: 'features.manage', label: 'Manage the Feature Library & assign features to variants', module: 'Catalogue', defaultRoles: ADMIN },
+  { code: 'features.view', label: 'View the Feature Library & variant assignments', module: 'Catalogue', defaultRoles: STAFF },
   { code: 'colours.manage', label: 'Manage the Colour Library & assign colours to vehicles', module: 'Catalogue', defaultRoles: ADMIN },
+  { code: 'colours.view', label: 'View the Colour Library & vehicle assignments', module: 'Catalogue', defaultRoles: STAFF },
+
+  { code: 'dynamic_fields.manage', label: 'Manage dynamic field categories & definitions', module: 'Dynamic Fields', defaultRoles: ADMIN },
+  { code: 'dynamic_fields.view', label: 'View dynamic field categories, definitions & values', module: 'Dynamic Fields', defaultRoles: STAFF },
 
   { code: 'pricing.view', label: 'View current & historical pricing', module: 'Pricing', defaultRoles: STAFF },
   { code: 'pricing.manage', label: 'Set city/dealer-wise pricing', module: 'Pricing', defaultRoles: ['SUPER_ADMIN', 'SALES_ADMIN'] },
@@ -78,7 +83,8 @@ const DEFAULT_PERMISSIONS: { code: string; label: string; module: string; defaul
   { code: 'offers.manage', label: 'Create / edit promotional offers', module: 'Offers', defaultRoles: ['SUPER_ADMIN', 'SALES_ADMIN'] },
   { code: 'warranty.manage', label: 'Edit warranty coverage per variant', module: 'Warranty', defaultRoles: ADMIN },
 
-  { code: 'dynamic_fields.manage', label: 'Manage dynamic field categories & definitions', module: 'Dynamic Fields', defaultRoles: ADMIN },
+  { code: 'car_data.submit', label: 'Submit car-data changes for approval', module: 'Car Data Approval', defaultRoles: ['DEALER_EXECUTIVE', 'DEALER_MANAGER'] },
+  { code: 'car_data.approve', label: 'Review & approve/reject car-data submissions', module: 'Car Data Approval', defaultRoles: ADMIN },
 
   { code: 'messages.manage', label: 'Send / view team messages on a lead', module: 'Messages', defaultRoles: STAFF },
 

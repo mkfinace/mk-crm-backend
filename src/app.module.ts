@@ -30,6 +30,7 @@ import { ColoursModule } from './colours/colours.module';
 import { PricingModule } from './pricing/pricing.module';
 import { OffersModule } from './offers/offers.module';
 import { WarrantyModule } from './warranty/warranty.module';
+import { CarDataSubmissionsModule } from './car-data-submissions/car-data-submissions.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { WarrantyModule } from './warranty/warranty.module';
     PricingModule,
     OffersModule,
     WarrantyModule,
+    CarDataSubmissionsModule,
     SiteSettingsModule,
     ReportsModule,
     NegotiationsModule,

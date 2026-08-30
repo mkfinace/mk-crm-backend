@@ -325,6 +325,24 @@ const MIGRATIONS: { name: string; sql: string }[] = [
     );`,
   },
   { name: 'warranty_variant_unique_index', sql: `CREATE UNIQUE INDEX IF NOT EXISTS "Warranty_variantId_key" ON "Warranty"("variantId");` },
+  // ---- Draft -> Approve -> Publish workflow ----
+  {
+    name: 'car_data_submission_table',
+    sql: `CREATE TABLE IF NOT EXISTS "CarDataSubmission" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "variantId" TEXT NOT NULL,
+      "changeType" TEXT NOT NULL,
+      "payloadJson" TEXT NOT NULL,
+      "summary" TEXT,
+      "status" TEXT NOT NULL DEFAULT 'PENDING',
+      "submittedBy" TEXT NOT NULL,
+      "reviewedBy" TEXT,
+      "reviewNotes" TEXT,
+      "reviewedAt" TIMESTAMP(3),
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );`,
+  },
+  { name: 'car_data_submission_status_index', sql: `CREATE INDEX IF NOT EXISTS "CarDataSubmission_status_idx" ON "CarDataSubmission"("status");` },
 ];
 
 @Injectable()
