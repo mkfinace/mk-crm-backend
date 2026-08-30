@@ -1,18 +1,21 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 const TEST_DRIVE_STATUSES = ['SCHEDULED', 'COMPLETED', 'CANCELLED'];
 
 @Injectable()
 export class TestDrivesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private realtime: RealtimeGateway) {}
 
   async createTestDrive(data: { leadId: string; scheduledAt: string }) {
     const lead = await this.prisma.lead.findUnique({ where: { id: data.leadId } });
     if (!lead) throw new NotFoundException('Lead not found.');
-    return this.prisma.testDrive.create({
+    const testDrive = await this.prisma.testDrive.create({
       data: { leadId: data.leadId, scheduledAt: new Date(data.scheduledAt) },
     });
+    this.realtime.notifyLeadUpdated(data.leadId);
+    return testDrive;
   }
 
   listTestDrives(leadId?: string) {
@@ -28,7 +31,7 @@ export class TestDrivesService {
     if (data.status && !TEST_DRIVE_STATUSES.includes(data.status)) {
       throw new BadRequestException(`Invalid status: ${data.status}. Must be one of ${TEST_DRIVE_STATUSES.join(', ')}.`);
     }
-    return this.prisma.testDrive.update({
+    const updated = await this.prisma.testDrive.update({
       where: { id },
       data: {
         scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : undefined,
@@ -36,11 +39,15 @@ export class TestDrivesService {
         feedback: data.feedback,
       },
     });
+    this.realtime.notifyLeadUpdated(testDrive.leadId);
+    return updated;
   }
 
   async deleteTestDrive(id: string) {
     const testDrive = await this.prisma.testDrive.findUnique({ where: { id } });
     if (!testDrive) throw new NotFoundException('Test drive not found.');
-    return this.prisma.testDrive.delete({ where: { id } });
+    const deleted = await this.prisma.testDrive.delete({ where: { id } });
+    this.realtime.notifyLeadUpdated(testDrive.leadId);
+    return deleted;
   }
 }

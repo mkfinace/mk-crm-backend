@@ -23,11 +23,13 @@ import { SiteSettingsModule } from './site-settings/site-settings.module';
 import { ReportsModule } from './reports/reports.module';
 import { NegotiationsModule } from './negotiations/negotiations.module';
 import { FinanceApplicationsModule } from './financeapplications/financeapplications.module';
+import { RealtimeModule } from './realtime/realtime.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
+    RealtimeModule,
     AuthModule,
     UsersModule,
     CatalogueModule,

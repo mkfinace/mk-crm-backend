@@ -1,11 +1,17 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 import { json } from 'express';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Required for the Deal Command Bar's real-time sync (RealtimeGateway) —
+  // without this, @WebSocketGateway has no transport wired up and every
+  // socket.io connection from the frontend silently fails.
+  app.useWebSocketAdapter(new IoAdapter(app));
 
   // Raised from the default ~100kb — hero image/video uploads are sent as
   // base64 data URIs (stored directly in Site Settings, no separate file

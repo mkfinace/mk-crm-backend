@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditLogsService } from '../auditlogs/auditlogs.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 export const SALES_PIPELINE = [
   'NEW', 'CONTACTED', 'QUALIFIED', 'INTERESTED', 'TEST_DRIVE', 'QUOTATION',
@@ -22,6 +23,7 @@ export class LeadsService {
     private prisma: PrismaService,
     private auditLogs: AuditLogsService,
     private notifications: NotificationsService,
+    private realtime: RealtimeGateway,
   ) {}
 
   private async generateLeadCode(): Promise<string> {
@@ -168,7 +170,7 @@ export class LeadsService {
       });
     }
 
-    return this.prisma.lead.update({
+    const updated = await this.prisma.lead.update({
       where: { id },
       data: {
         brandId: data.brandId,
@@ -192,6 +194,8 @@ export class LeadsService {
       },
       include: { customer: true, brand: true, model: true, variant: true },
     });
+    this.realtime.notifyLeadUpdated(id);
+    return updated;
   }
 
   async deleteLead(id: string) {
@@ -290,6 +294,7 @@ export class LeadsService {
       );
     }
 
+    this.realtime.notifyLeadUpdated(id);
     return lead;
   }
 
@@ -330,6 +335,7 @@ export class LeadsService {
     });
     await this.logActivity(id, userId, 'SALES_STATUS_UPDATED', { status });
     await this.auditLogs.logAction(userId, 'Lead', id, 'SALES_STATUS_UPDATED', { salesStatus: before?.salesStatus }, { salesStatus: status });
+    this.realtime.notifyLeadUpdated(id);
     return lead;
   }
 
@@ -341,6 +347,7 @@ export class LeadsService {
     const lead = await this.prisma.lead.update({ where: { id }, data: { financeStatus: status } });
     await this.logActivity(id, userId, 'FINANCE_STATUS_UPDATED', { status });
     await this.auditLogs.logAction(userId, 'Lead', id, 'FINANCE_STATUS_UPDATED', { financeStatus: before?.financeStatus }, { financeStatus: status });
+    this.realtime.notifyLeadUpdated(id);
     return lead;
   }
 
@@ -350,6 +357,7 @@ export class LeadsService {
       data: { leadId, userId, type: data.type, result: data.result, notes: data.notes, nextFollowUpAt: new Date(data.nextFollowUpAt) },
     });
     await this.logActivity(leadId, userId, 'FOLLOW_UP_ADDED', { type: data.type, result: data.result });
+    this.realtime.notifyLeadUpdated(leadId);
     return followUp;
   }
 
@@ -376,6 +384,7 @@ export class LeadsService {
       },
     });
     await this.logActivity(id, userId, 'NEXT_ACTION_UPDATED', { nextAction: data.nextAction, owner: data.nextActionOwner });
+    this.realtime.notifyLeadUpdated(id);
     return updated;
   }
 
@@ -390,6 +399,7 @@ export class LeadsService {
     await this.logActivity(id, userId, blocker ? 'BLOCKER_SET' : 'BLOCKER_CLEARED', { blocker, blockerCategory: nextCategory });
     await this.auditLogs.logAction(userId, 'Lead', id, blocker ? 'BLOCKER_SET' : 'BLOCKER_CLEARED',
       { blocker: lead.blocker, blockerCategory: lead.blockerCategory }, { blocker, blockerCategory: nextCategory });
+    this.realtime.notifyLeadUpdated(id);
     return updated;
   }
 
@@ -436,6 +446,7 @@ export class LeadsService {
       },
     });
     await this.logActivity(id, userId, sameDayDeal ? 'SAME_DAY_DEAL_MARKED' : 'SAME_DAY_DEAL_UNMARKED');
+    this.realtime.notifyLeadUpdated(id);
     return updated;
   }
 
@@ -525,8 +536,10 @@ export class LeadsService {
   async addMyMessage(customerId: string, leadId: string, body: string) {
     const lead = await this.prisma.lead.findUnique({ where: { id: leadId } });
     if (!lead || lead.customerId !== customerId) throw new NotFoundException('Lead not found.');
-    return this.prisma.message.create({
+    const message = await this.prisma.message.create({
       data: { leadId, senderCustomerId: customerId, body, customerVisible: true },
     });
+    this.realtime.notifyLeadUpdated(leadId);
+    return message;
   }
 }

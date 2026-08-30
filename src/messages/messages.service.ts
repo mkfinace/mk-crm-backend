@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 @Injectable()
 export class MessagesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private realtime: RealtimeGateway) {}
 
   async createMessage(data: {
     leadId: string;
@@ -14,7 +15,7 @@ export class MessagesService {
   }) {
     const lead = await this.prisma.lead.findUnique({ where: { id: data.leadId } });
     if (!lead) throw new NotFoundException('Lead not found.');
-    return this.prisma.message.create({
+    const message = await this.prisma.message.create({
       data: {
         leadId: data.leadId,
         senderUserId: data.senderUserId,
@@ -24,6 +25,8 @@ export class MessagesService {
       },
       include: { sender: true },
     });
+    this.realtime.notifyLeadUpdated(data.leadId);
+    return message;
   }
 
   listMessages(leadId: string) {

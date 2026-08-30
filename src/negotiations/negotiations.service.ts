@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditLogsService } from '../auditlogs/auditlogs.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 // Discount above this amount needs Dealer Manager / Admin sign-off before
 // the Dealer Executive can proceed with it. Simple constant for now —
@@ -10,7 +11,7 @@ const DISCOUNT_APPROVAL_LIMIT = 15000;
 
 @Injectable()
 export class NegotiationsService {
-  constructor(private prisma: PrismaService, private auditLogs: AuditLogsService) {}
+  constructor(private prisma: PrismaService, private auditLogs: AuditLogsService, private realtime: RealtimeGateway) {}
 
   async createNegotiation(data: {
     leadId: string;
@@ -40,6 +41,7 @@ export class NegotiationsService {
       discountRequested: data.discountRequested,
       requiresApproval,
     });
+    this.realtime.notifyLeadUpdated(data.leadId);
     return negotiation;
   }
 
@@ -65,6 +67,7 @@ export class NegotiationsService {
       },
     });
     await this.auditLogs.logAction(decidedBy, 'Negotiation', id, approve ? 'NEGOTIATION_APPROVED' : 'NEGOTIATION_REJECTED');
+    this.realtime.notifyLeadUpdated(negotiation.leadId);
     return updated;
   }
 }

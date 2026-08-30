@@ -1,9 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 @Injectable()
 export class BookingsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private realtime: RealtimeGateway) {}
 
   async createBooking(data: { leadId: string; bookingAmount: number; bookedBy: string }) {
     const lead = await this.prisma.lead.findUnique({ where: { id: data.leadId } });
@@ -13,6 +14,7 @@ export class BookingsService {
 
     const booking = await this.prisma.booking.create({ data });
     await this.prisma.lead.update({ where: { id: data.leadId }, data: { salesStatus: 'BOOKING' } });
+    this.realtime.notifyLeadUpdated(data.leadId);
     return booking;
   }
 

@@ -1,16 +1,17 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 const VALID_STATUSES = ['VERIFIED', 'REJECTED'];
 
 @Injectable()
 export class DocumentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private realtime: RealtimeGateway) {}
 
   async createDocument(data: { leadId: string; type: string; fileUrl: string; uploadedBy: string; personType?: string; personName?: string }) {
     const lead = await this.prisma.lead.findUnique({ where: { id: data.leadId } });
     if (!lead) throw new NotFoundException('Lead not found.');
-    return this.prisma.document.create({
+    const doc = await this.prisma.document.create({
       data: {
         leadId: data.leadId,
         type: data.type,
@@ -21,6 +22,8 @@ export class DocumentsService {
         personName: data.personName,
       },
     });
+    this.realtime.notifyLeadUpdated(data.leadId);
+    return doc;
   }
 
   listDocuments(leadId?: string) {
@@ -39,7 +42,7 @@ export class DocumentsService {
     if (status === 'REJECTED' && !rejectionReason) {
       throw new BadRequestException('Rejection reason is mandatory when rejecting a document.');
     }
-    return this.prisma.document.update({
+    const updated = await this.prisma.document.update({
       where: { id },
       data: {
         status,
@@ -47,12 +50,14 @@ export class DocumentsService {
         rejectionReason: status === 'REJECTED' ? rejectionReason : null,
       },
     });
+    this.realtime.notifyLeadUpdated(doc.leadId);
+    return updated;
   }
 
   async reuploadDocument(id: string, fileUrl: string, uploadedBy: string) {
     const doc = await this.prisma.document.findUnique({ where: { id } });
     if (!doc) throw new NotFoundException('Document not found.');
-    return this.prisma.document.update({
+    const updated = await this.prisma.document.update({
       where: { id },
       data: {
         fileUrl,
@@ -63,11 +68,15 @@ export class DocumentsService {
         version: doc.version + 1,
       },
     });
+    this.realtime.notifyLeadUpdated(doc.leadId);
+    return updated;
   }
 
   async deleteDocument(id: string) {
     const doc = await this.prisma.document.findUnique({ where: { id } });
     if (!doc) throw new NotFoundException('Document not found.');
-    return this.prisma.document.delete({ where: { id } });
+    const deleted = await this.prisma.document.delete({ where: { id } });
+    this.realtime.notifyLeadUpdated(doc.leadId);
+    return deleted;
   }
 }

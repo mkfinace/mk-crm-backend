@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditLogsService } from '../auditlogs/auditlogs.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 export const FINANCE_CASE_STAGES = [
   'PENDING_APPROVAL', 'PENDING', 'DOCUMENTS', 'LOGIN', 'VERIFICATION', 'BANK_QUERY',
@@ -13,7 +14,7 @@ const NEEDS_APPROVAL_ROLES = ['DEALER_EXECUTIVE', 'DEALER_MANAGER'];
 
 @Injectable()
 export class FinanceCasesService {
-  constructor(private prisma: PrismaService, private auditLogs: AuditLogsService) {}
+  constructor(private prisma: PrismaService, private auditLogs: AuditLogsService, private realtime: RealtimeGateway) {}
 
   async createFinanceCase(
     data: {
@@ -59,6 +60,7 @@ export class FinanceCasesService {
       undefined,
       { loanAmount: data.loanAmount },
     );
+    this.realtime.notifyLeadUpdated(data.leadId);
     return financeCase;
   }
 
@@ -78,6 +80,7 @@ export class FinanceCasesService {
     await this.prisma.lead.update({ where: { id: financeCase.leadId }, data: { financeStatus: 'PENDING' } });
 
     await this.auditLogs.logAction(approvedBy, 'FinanceCase', id, 'FINANCE_CASE_APPROVED');
+    this.realtime.notifyLeadUpdated(financeCase.leadId);
     return updated;
   }
 
@@ -114,6 +117,7 @@ export class FinanceCasesService {
     await this.prisma.lead.update({ where: { id: financeCase.leadId }, data: { financeStatus: stage } });
 
     await this.auditLogs.logAction(changedBy, 'FinanceCase', id, 'FINANCE_STAGE_UPDATED', { stage: financeCase.stage }, { stage });
+    this.realtime.notifyLeadUpdated(financeCase.leadId);
     return updated;
   }
 
@@ -131,6 +135,7 @@ export class FinanceCasesService {
     }
     const updated = await this.prisma.financeCase.update({ where: { id }, data });
     await this.auditLogs.logAction(changedBy, 'FinanceCase', id, 'FINANCE_CASE_DETAILS_UPDATED', undefined, data);
+    this.realtime.notifyLeadUpdated(financeCase.leadId);
     return updated;
   }
 
@@ -159,6 +164,7 @@ export class FinanceCasesService {
     }
 
     await this.auditLogs.logAction(createdBy, 'BankQuery', bankQuery.id, 'BANK_QUERY_CREATED', undefined, { query: data.query });
+    this.realtime.notifyLeadUpdated(financeCase.leadId);
     return bankQuery;
   }
 
@@ -176,20 +182,20 @@ export class FinanceCasesService {
       data: { status: 'RESOLVED', resolvedBy, resolutionNotes, resolvedAt: new Date() },
     });
 
+    const financeCase = await this.prisma.financeCase.findUnique({ where: { id: bankQuery.financeCaseId } });
+
     // If no other queries are still open on this case, move it forward.
     const stillOpen = await this.prisma.bankQuery.count({ where: { financeCaseId: bankQuery.financeCaseId, status: 'OPEN' } });
-    if (stillOpen === 0) {
-      const financeCase = await this.prisma.financeCase.findUnique({ where: { id: bankQuery.financeCaseId } });
-      if (financeCase && financeCase.stage === 'BANK_QUERY') {
-        await this.prisma.financeCase.update({ where: { id: bankQuery.financeCaseId }, data: { stage: 'QUERY_RESOLVED' } });
-        await this.prisma.financeStatusHistory.create({
-          data: { financeCaseId: bankQuery.financeCaseId, fromStage: 'BANK_QUERY', toStage: 'QUERY_RESOLVED', changedBy: resolvedBy },
-        });
-        await this.prisma.lead.update({ where: { id: financeCase.leadId }, data: { financeStatus: 'QUERY_RESOLVED' } });
-      }
+    if (stillOpen === 0 && financeCase && financeCase.stage === 'BANK_QUERY') {
+      await this.prisma.financeCase.update({ where: { id: bankQuery.financeCaseId }, data: { stage: 'QUERY_RESOLVED' } });
+      await this.prisma.financeStatusHistory.create({
+        data: { financeCaseId: bankQuery.financeCaseId, fromStage: 'BANK_QUERY', toStage: 'QUERY_RESOLVED', changedBy: resolvedBy },
+      });
+      await this.prisma.lead.update({ where: { id: financeCase.leadId }, data: { financeStatus: 'QUERY_RESOLVED' } });
     }
 
     await this.auditLogs.logAction(resolvedBy, 'BankQuery', id, 'BANK_QUERY_RESOLVED', undefined, { resolutionNotes });
+    if (financeCase) this.realtime.notifyLeadUpdated(financeCase.leadId);
     return updated;
   }
 }

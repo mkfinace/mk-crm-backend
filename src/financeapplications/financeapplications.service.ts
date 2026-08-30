@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditLogsService } from '../auditlogs/auditlogs.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 @Injectable()
 export class FinanceApplicationsService {
-  constructor(private prisma: PrismaService, private auditLogs: AuditLogsService) {}
+  constructor(private prisma: PrismaService, private auditLogs: AuditLogsService, private realtime: RealtimeGateway) {}
 
   async createApplication(
     data: {
@@ -36,6 +37,7 @@ export class FinanceApplicationsService {
     });
 
     await this.auditLogs.logAction(executiveId, 'FinanceApplication', application.id, 'FINANCE_APPLICATION_CREATED', undefined, { bankId: data.bankId });
+    this.realtime.notifyLeadUpdated(data.leadId);
     return application;
   }
 
@@ -56,6 +58,7 @@ export class FinanceApplicationsService {
       include: { bank: true },
     });
     await this.auditLogs.logAction(changedBy, 'FinanceApplication', id, 'FINANCE_APPLICATION_STATUS_UPDATED', { status: application.status }, { status });
+    this.realtime.notifyLeadUpdated(application.leadId);
     return updated;
   }
 }

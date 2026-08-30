@@ -1,11 +1,12 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 const DELIVERY_STATUSES = ['SCHEDULED', 'DELIVERED', 'DELAYED'];
 
 @Injectable()
 export class DeliveriesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private realtime: RealtimeGateway) {}
 
   async createDelivery(data: { leadId: string; scheduledAt: string }) {
     const lead = await this.prisma.lead.findUnique({ where: { id: data.leadId } });
@@ -13,9 +14,11 @@ export class DeliveriesService {
     const existing = await this.prisma.delivery.findUnique({ where: { leadId: data.leadId } });
     if (existing) throw new BadRequestException('This lead already has a delivery scheduled.');
 
-    return this.prisma.delivery.create({
+    const delivery = await this.prisma.delivery.create({
       data: { leadId: data.leadId, scheduledAt: new Date(data.scheduledAt) },
     });
+    this.realtime.notifyLeadUpdated(data.leadId);
+    return delivery;
   }
 
   listDeliveries(leadId?: string) {
@@ -45,6 +48,7 @@ export class DeliveriesService {
       await this.prisma.lead.update({ where: { id: delivery.leadId }, data: { salesStatus: 'CLOSED' } });
     }
 
+    this.realtime.notifyLeadUpdated(delivery.leadId);
     return updated;
   }
 }

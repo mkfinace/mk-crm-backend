@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 @Injectable()
 export class QuotationsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private realtime: RealtimeGateway) {}
 
   async createQuotation(data: {
     leadId: string;
@@ -34,7 +35,7 @@ export class QuotationsService {
     const latest = await this.prisma.quotation.findFirst({ where: { leadId: data.leadId }, orderBy: { version: 'desc' } });
     const version = (latest?.version || 0) + 1;
 
-    return this.prisma.quotation.create({
+    const quotation = await this.prisma.quotation.create({
       data: {
         leadId: data.leadId,
         price: data.price,
@@ -59,6 +60,8 @@ export class QuotationsService {
         rsa: data.rsa,
       },
     });
+    this.realtime.notifyLeadUpdated(data.leadId);
+    return quotation;
   }
 
   listQuotations(leadId?: string) {
@@ -71,6 +74,8 @@ export class QuotationsService {
   async deleteQuotation(id: string) {
     const quotation = await this.prisma.quotation.findUnique({ where: { id } });
     if (!quotation) throw new NotFoundException('Quotation not found.');
-    return this.prisma.quotation.delete({ where: { id } });
+    const deleted = await this.prisma.quotation.delete({ where: { id } });
+    this.realtime.notifyLeadUpdated(quotation.leadId);
+    return deleted;
   }
 }
