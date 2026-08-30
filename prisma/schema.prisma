@@ -216,6 +216,32 @@ model SlaConfig {
   updatedAt DateTime @updatedAt
 }
 
+// ==================== RBAC: database-driven permissions ====================
+// UserRole (fixed enum, unchanged) still decides identity/what a person IS.
+// Permission + RolePermission decide what each role can DO — admin-editable
+// without a redeploy. Modules migrate to this incrementally (see
+// PermissionsGuard); anything not yet migrated keeps using the older
+// hardcoded @Roles() decorator, so nothing breaks mid-migration.
+model Permission {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  label     String
+  module    String // groups permissions in the admin UI, e.g. "Leads"
+  createdAt DateTime @default(now())
+
+  rolePermissions RolePermission[]
+}
+
+model RolePermission {
+  id             String     @id @default(cuid())
+  role           String
+  permissionCode String
+  permission     Permission @relation(fields: [permissionCode], references: [code])
+  createdAt      DateTime   @default(now())
+
+  @@unique([role, permissionCode])
+}
+
 // ==================== CUSTOMER & LEAD ====================
 
 model Customer {

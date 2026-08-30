@@ -24,12 +24,14 @@ import { ReportsModule } from './reports/reports.module';
 import { NegotiationsModule } from './negotiations/negotiations.module';
 import { FinanceApplicationsModule } from './financeapplications/financeapplications.module';
 import { RealtimeModule } from './realtime/realtime.module';
+import { PermissionsModule } from './permissions/permissions.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     RealtimeModule,
+    PermissionsModule,
     AuthModule,
     UsersModule,
     CatalogueModule,

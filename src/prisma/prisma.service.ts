@@ -206,6 +206,28 @@ const MIGRATIONS: { name: string; sql: string }[] = [
   // ---- Staff password login brute-force protection ----
   { name: 'user_failed_login_attempts_field', sql: `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "failedLoginAttempts" INTEGER NOT NULL DEFAULT 0;` },
   { name: 'user_locked_until_field', sql: `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "lockedUntil" TIMESTAMP(3);` },
+  // ---- RBAC: database-driven permissions ----
+  {
+    name: 'permission_table',
+    sql: `CREATE TABLE IF NOT EXISTS "Permission" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "code" TEXT NOT NULL,
+      "label" TEXT NOT NULL,
+      "module" TEXT NOT NULL,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );`,
+  },
+  { name: 'permission_code_unique_index', sql: `CREATE UNIQUE INDEX IF NOT EXISTS "Permission_code_key" ON "Permission"("code");` },
+  {
+    name: 'role_permission_table',
+    sql: `CREATE TABLE IF NOT EXISTS "RolePermission" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "role" TEXT NOT NULL,
+      "permissionCode" TEXT NOT NULL,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );`,
+  },
+  { name: 'role_permission_role_code_unique_index', sql: `CREATE UNIQUE INDEX IF NOT EXISTS "RolePermission_role_permissionCode_key" ON "RolePermission"("role", "permissionCode");` },
 ];
 
 @Injectable()
