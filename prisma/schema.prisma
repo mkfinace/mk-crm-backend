@@ -105,21 +105,24 @@ model Variant {
   fuelType         String
   transmission     String
   exShowroomPrice  Float
-  featuresJson     String? // JSON string (SQLite has no native Json type)
+  featuresJson     String? // JSON string (SQLite has no native Json type) — superseded by VariantFeature, kept for backward compat
   specsJson        String?
 
-  vehicles    Vehicle[]
-  leads       Lead[]
-  fieldValues FieldValue[]
+  vehicles        Vehicle[]
+  leads           Lead[]
+  fieldValues     FieldValue[]
+  variantFeatures VariantFeature[]
 }
 
 model Vehicle {
   id              String  @id @default(cuid())
   variantId       String
   variant         Variant @relation(fields: [variantId], references: [id])
-  colourOptionsJson String?
+  colourOptionsJson String? // superseded by VehicleColour, kept for backward compat
   imagesJson      String?
   isActive        Boolean @default(true)
+
+  vehicleColours VehicleColour[]
 }
 
 // ==================== DYNAMIC FIELD SYSTEM ====================
@@ -191,6 +194,60 @@ model FieldValue {
   updatedAt DateTime @updatedAt
 
   @@unique([fieldId, variantId])
+}
+
+// ==================== FEATURE & COLOUR LIBRARIES ====================
+// Reusable, admin-managed lists — the same Feature/Colour is picked (not
+// retyped) across every variant/vehicle that has it, so "Sunroof" or "Pearl
+// White" is one record, one spelling, one place to fix a typo.
+
+model Feature {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  category  String? // free-text grouping, e.g. "Safety", "Comfort", "Infotainment"
+  icon      String? // optional emoji/short icon identifier
+  status    String   @default("ACTIVE") // ACTIVE | ARCHIVED
+  createdAt DateTime @default(now())
+
+  variantFeatures VariantFeature[]
+}
+
+model VariantFeature {
+  id            String  @id @default(cuid())
+  variantId     String
+  variant       Variant @relation(fields: [variantId], references: [id])
+  featureId     String
+  feature       Feature @relation(fields: [featureId], references: [id])
+  applicability String  @default("STANDARD") // STANDARD | OPTIONAL | NOT_AVAILABLE
+
+  createdAt DateTime @default(now())
+
+  @@unique([variantId, featureId])
+}
+
+model Colour {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  hexCode   String
+  type      String   @default("EXTERIOR") // EXTERIOR | INTERIOR
+  status    String   @default("ACTIVE") // ACTIVE | ARCHIVED
+  createdAt DateTime @default(now())
+
+  vehicleColours VehicleColour[]
+}
+
+model VehicleColour {
+  id        String  @id @default(cuid())
+  vehicleId String
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+  colourId  String
+  colour    Colour  @relation(fields: [colourId], references: [id])
+  imageUrl  String?
+  isDefault Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@unique([vehicleId, colourId])
 }
 
 // ==================== SITE CONTENT (ADMIN-EDITABLE) ====================

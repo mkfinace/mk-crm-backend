@@ -228,6 +228,54 @@ const MIGRATIONS: { name: string; sql: string }[] = [
     );`,
   },
   { name: 'role_permission_role_code_unique_index', sql: `CREATE UNIQUE INDEX IF NOT EXISTS "RolePermission_role_permissionCode_key" ON "RolePermission"("role", "permissionCode");` },
+  // ---- Feature & Colour libraries ----
+  {
+    name: 'feature_table',
+    sql: `CREATE TABLE IF NOT EXISTS "Feature" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "name" TEXT NOT NULL,
+      "category" TEXT,
+      "icon" TEXT,
+      "status" TEXT NOT NULL DEFAULT 'ACTIVE',
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );`,
+  },
+  { name: 'feature_name_unique_index', sql: `CREATE UNIQUE INDEX IF NOT EXISTS "Feature_name_key" ON "Feature"("name");` },
+  {
+    name: 'variant_feature_table',
+    sql: `CREATE TABLE IF NOT EXISTS "VariantFeature" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "variantId" TEXT NOT NULL,
+      "featureId" TEXT NOT NULL,
+      "applicability" TEXT NOT NULL DEFAULT 'STANDARD',
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );`,
+  },
+  { name: 'variant_feature_unique_index', sql: `CREATE UNIQUE INDEX IF NOT EXISTS "VariantFeature_variantId_featureId_key" ON "VariantFeature"("variantId", "featureId");` },
+  {
+    name: 'colour_table',
+    sql: `CREATE TABLE IF NOT EXISTS "Colour" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "name" TEXT NOT NULL,
+      "hexCode" TEXT NOT NULL,
+      "type" TEXT NOT NULL DEFAULT 'EXTERIOR',
+      "status" TEXT NOT NULL DEFAULT 'ACTIVE',
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );`,
+  },
+  { name: 'colour_name_unique_index', sql: `CREATE UNIQUE INDEX IF NOT EXISTS "Colour_name_key" ON "Colour"("name");` },
+  {
+    name: 'vehicle_colour_table',
+    sql: `CREATE TABLE IF NOT EXISTS "VehicleColour" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "vehicleId" TEXT NOT NULL,
+      "colourId" TEXT NOT NULL,
+      "imageUrl" TEXT,
+      "isDefault" BOOLEAN NOT NULL DEFAULT false,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );`,
+  },
+  { name: 'vehicle_colour_unique_index', sql: `CREATE UNIQUE INDEX IF NOT EXISTS "VehicleColour_vehicleId_colourId_key" ON "VehicleColour"("vehicleId", "colourId");` },
 ];
 
 @Injectable()

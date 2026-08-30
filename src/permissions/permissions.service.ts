@@ -69,6 +69,9 @@ const DEFAULT_PERMISSIONS: { code: string; label: string; module: string; defaul
 
   { code: 'catalogue.manage', label: 'Manage brands / models / variants', module: 'Catalogue', defaultRoles: ADMIN },
 
+  { code: 'features.manage', label: 'Manage the Feature Library & assign features to variants', module: 'Catalogue', defaultRoles: ADMIN },
+  { code: 'colours.manage', label: 'Manage the Colour Library & assign colours to vehicles', module: 'Catalogue', defaultRoles: ADMIN },
+
   { code: 'dynamic_fields.manage', label: 'Manage dynamic field categories & definitions', module: 'Dynamic Fields', defaultRoles: ADMIN },
 
   { code: 'messages.manage', label: 'Send / view team messages on a lead', module: 'Messages', defaultRoles: STAFF },

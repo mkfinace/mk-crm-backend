@@ -25,6 +25,8 @@ import { NegotiationsModule } from './negotiations/negotiations.module';
 import { FinanceApplicationsModule } from './financeapplications/financeapplications.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { PermissionsModule } from './permissions/permissions.module';
+import { FeaturesModule } from './features/features.module';
+import { ColoursModule } from './colours/colours.module';
 
 @Module({
   imports: [
@@ -49,6 +51,8 @@ import { PermissionsModule } from './permissions/permissions.module';
     AuditLogsModule,
     DynamicFieldsModule,
     VehiclesModule,
+    FeaturesModule,
+    ColoursModule,
     SiteSettingsModule,
     ReportsModule,
     NegotiationsModule,
