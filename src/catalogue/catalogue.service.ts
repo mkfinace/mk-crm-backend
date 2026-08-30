@@ -93,6 +93,47 @@ export class CatalogueService {
     return this.prisma.variant.update({ where: { id }, data });
   }
 
+  // Bulk create/update variants under one model from a pasted spreadsheet —
+  // matches by name (case-insensitive) within that model: existing name
+  // updates fuel/transmission/price, new name creates a fresh variant.
+  // Never touches variants outside the given model or rows it can't parse.
+  async bulkImportVariants(modelId: string, rows: { name: string; fuelType: string; transmission: string; exShowroomPrice: number }[]) {
+    const model = await this.prisma.model.findUnique({ where: { id: modelId } });
+    if (!model) throw new NotFoundException('Model not found.');
+
+    const existing = await this.prisma.variant.findMany({ where: { modelId } });
+    const byName = new Map<string, { id: string }>(existing.map((v) => [v.name.toLowerCase().trim(), v]));
+
+    let created = 0;
+    let updated = 0;
+    const skipped: { row: number; reason: string }[] = [];
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row.name?.trim()) { skipped.push({ row: i + 1, reason: 'Missing variant name.' }); continue; }
+      if (!row.fuelType?.trim() || !row.transmission?.trim()) { skipped.push({ row: i + 1, reason: 'Missing fuel type or transmission.' }); continue; }
+      if (!Number.isFinite(row.exShowroomPrice) || row.exShowroomPrice <= 0) { skipped.push({ row: i + 1, reason: 'Invalid or missing ex-showroom price.' }); continue; }
+
+      const key = row.name.toLowerCase().trim();
+      const match = byName.get(key);
+      if (match) {
+        await this.prisma.variant.update({
+          where: { id: match.id },
+          data: { fuelType: row.fuelType.trim(), transmission: row.transmission.trim(), exShowroomPrice: row.exShowroomPrice },
+        });
+        updated++;
+      } else {
+        const createdVariant = await this.prisma.variant.create({
+          data: { modelId, name: row.name.trim(), fuelType: row.fuelType.trim(), transmission: row.transmission.trim(), exShowroomPrice: row.exShowroomPrice },
+        });
+        byName.set(key, createdVariant); // guards against duplicate names within the same upload
+        created++;
+      }
+    }
+
+    return { created, updated, skipped };
+  }
+
   async deleteVariant(id: string) {
     const variant = await this.prisma.variant.findUnique({ where: { id } });
     if (!variant) throw new NotFoundException('Variant not found.');

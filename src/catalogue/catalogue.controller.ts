@@ -109,6 +109,13 @@ export class CatalogueController {
 
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermission('catalogue.manage')
+  @Post('models/:modelId/variants/bulk-import')
+  bulkImportVariants(@Param('modelId') modelId: string, @Body('rows') rows: { name: string; fuelType: string; transmission: string; exShowroomPrice: number }[]) {
+    return this.catalogueService.bulkImportVariants(modelId, rows || []);
+  }
+
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermission('catalogue.manage')
   @Put('variants/:id')
   updateVariant(@Param('id') id: string, @Body() data: UpdateVariantDto) {
     return this.catalogueService.updateVariant(id, data);
