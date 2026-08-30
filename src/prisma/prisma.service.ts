@@ -163,6 +163,10 @@ const MIGRATIONS: { name: string; sql: string }[] = [
   // ---- Phase D: Deal Closure metadata ----
   { name: 'lead_closed_at_field', sql: `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "closedAt" TIMESTAMP(3);` },
   { name: 'lead_closed_by_field', sql: `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "closedBy" TEXT;` },
+  { name: 'lead_next_action_field', sql: `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "nextAction" TEXT;` },
+  { name: 'lead_next_action_owner_field', sql: `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "nextActionOwner" TEXT;` },
+  { name: 'lead_next_action_due_field', sql: `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "nextActionDueAt" TIMESTAMP(3);` },
+  { name: 'lead_blocker_field', sql: `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "blocker" TEXT;` },
 ];
 
 @Injectable()

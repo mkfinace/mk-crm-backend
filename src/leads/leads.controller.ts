@@ -112,4 +112,24 @@ export class LeadsController {
   addFollowUp(@Param('id') id: string, @Body() data: AddFollowUpDto) {
     return this.leadsService.addFollowUp(id, data.userId, data);
   }
+
+  // Deal Command Bar — both Sales and Finance can set/clear these; who did
+  // it and when is captured via the activity log, not a role restriction.
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...STAFF_ROLES)
+  @Put(':id/next-action')
+  updateNextAction(
+    @Param('id') id: string,
+    @Body() data: { nextAction?: string; nextActionOwner?: string; nextActionDueAt?: string },
+    @Req() req: any,
+  ) {
+    return this.leadsService.updateNextAction(id, data, req.user.sub);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...STAFF_ROLES)
+  @Put(':id/blocker')
+  updateBlocker(@Param('id') id: string, @Body('blocker') blocker: string | null, @Req() req: any) {
+    return this.leadsService.updateBlocker(id, blocker, req.user.sub);
+  }
 }

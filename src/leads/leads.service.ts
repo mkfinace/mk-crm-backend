@@ -363,6 +363,30 @@ export class LeadsService {
   // Returns each open lead's most recently logged follow-up (i.e. the
   // currently-scheduled next follow-up) so the frontend can bucket into
   // Due Today / Overdue / Upcoming / No Follow-up Scheduled.
+  // ==================== Deal Command Bar: Next Action + Blocker ====================
+  async updateNextAction(id: string, data: { nextAction?: string; nextActionOwner?: string; nextActionDueAt?: string }, userId: string) {
+    const lead = await this.prisma.lead.findUnique({ where: { id } });
+    if (!lead) throw new NotFoundException('Lead not found.');
+    const updated = await this.prisma.lead.update({
+      where: { id },
+      data: {
+        nextAction: data.nextAction,
+        nextActionOwner: data.nextActionOwner,
+        nextActionDueAt: data.nextActionDueAt ? new Date(data.nextActionDueAt) : null,
+      },
+    });
+    await this.logActivity(id, userId, 'NEXT_ACTION_UPDATED', { nextAction: data.nextAction, owner: data.nextActionOwner });
+    return updated;
+  }
+
+  async updateBlocker(id: string, blocker: string | null, userId: string) {
+    const lead = await this.prisma.lead.findUnique({ where: { id } });
+    if (!lead) throw new NotFoundException('Lead not found.');
+    const updated = await this.prisma.lead.update({ where: { id }, data: { blocker: blocker || null } });
+    await this.logActivity(id, userId, blocker ? 'BLOCKER_SET' : 'BLOCKER_CLEARED', { blocker });
+    return updated;
+  }
+
   async getFollowUpDashboard(filters: { dealerExecutiveId?: string; financeExecutiveId?: string }) {
     const leads = await this.prisma.lead.findMany({
       where: {

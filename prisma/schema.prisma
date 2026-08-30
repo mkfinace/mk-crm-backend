@@ -288,6 +288,12 @@ model Lead {
   closedAt DateTime?
   closedBy String?
 
+  // ---- Deal Command Bar: shared Next Action + Blocker ----
+  nextAction        String?
+  nextActionOwner   String?
+  nextActionDueAt   DateTime?
+  blocker           String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
