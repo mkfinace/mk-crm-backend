@@ -2,6 +2,13 @@ import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
 
+// ---- Brute-force protection (mirrors the same approach in auth.service.ts) ----
+const LOGIN_MAX_ATTEMPTS = 5;
+const LOGIN_LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes
+const OTP_REQUEST_LIMIT = 5;
+const OTP_REQUEST_WINDOW_MS = 15 * 60 * 1000;
+const OTP_MAX_VERIFY_ATTEMPTS = 5;
+
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) {}
@@ -86,8 +93,30 @@ export class UsersService {
     const user = await this.prisma.user.findUnique({ where: { mobile } });
     if (!user || !user.passwordHash) return null;
     if (user.status !== 'ACTIVE') return null;
+
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+      const minutesLeft = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60000);
+      throw new UnauthorizedException(`Too many failed attempts. Try again in ${minutesLeft} minute${minutesLeft === 1 ? '' : 's'}.`);
+    }
+
     const valid = await bcrypt.compare(password, user.passwordHash);
-    return valid ? user : null;
+    if (!valid) {
+      const attempts = user.failedLoginAttempts + 1;
+      const lockingOut = attempts >= LOGIN_MAX_ATTEMPTS;
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          failedLoginAttempts: lockingOut ? 0 : attempts,
+          lockedUntil: lockingOut ? new Date(Date.now() + LOGIN_LOCKOUT_MS) : null,
+        },
+      });
+      return null;
+    }
+
+    if (user.failedLoginAttempts > 0 || user.lockedUntil) {
+      await this.prisma.user.update({ where: { id: user.id }, data: { failedLoginAttempts: 0, lockedUntil: null } });
+    }
+    return user;
   }
 
   // Emergency password reset — for when nobody can log in yet (e.g. the
@@ -98,7 +127,7 @@ export class UsersService {
     const user = await this.prisma.user.findUnique({ where: { mobile } });
     if (!user) throw new BadRequestException('No user found with that mobile number.');
     const passwordHash = await bcrypt.hash(newPassword, 10);
-    await this.prisma.user.update({ where: { id: user.id }, data: { passwordHash, status: 'ACTIVE' } });
+    await this.prisma.user.update({ where: { id: user.id }, data: { passwordHash, status: 'ACTIVE', failedLoginAttempts: 0, lockedUntil: null } });
     return { success: true, message: `Password reset for ${user.name} (${user.role}). You can log in now.` };
   }
 
@@ -110,6 +139,14 @@ export class UsersService {
     if (!user || user.status !== 'ACTIVE') {
       return { success: true, message: 'If that mobile number has an active staff account, an OTP has been sent.' };
     }
+
+    const recentCount = await this.prisma.otpCode.count({
+      where: { mobile, userId: user.id, createdAt: { gte: new Date(Date.now() - OTP_REQUEST_WINDOW_MS) } },
+    });
+    if (recentCount >= OTP_REQUEST_LIMIT) {
+      return { success: true, message: 'If that mobile number has an active staff account, an OTP has been sent.' };
+    }
+
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min validity
     await this.prisma.otpCode.create({ data: { mobile, code, userId: user.id, expiresAt } });
@@ -124,18 +161,28 @@ export class UsersService {
 
   async resetPasswordWithOtp(mobile: string, code: string, newPassword: string) {
     const otp = await this.prisma.otpCode.findFirst({
-      where: { mobile, code, verified: false, userId: { not: null } },
+      where: { mobile, verified: false, userId: { not: null } },
       orderBy: { createdAt: 'desc' },
     });
     if (!otp) throw new UnauthorizedException('Invalid OTP.');
     if (otp.expiresAt < new Date()) throw new UnauthorizedException('OTP expired — request a new one.');
+    if (otp.attempts >= OTP_MAX_VERIFY_ATTEMPTS) {
+      throw new UnauthorizedException('Too many incorrect attempts. Please request a new OTP.');
+    }
+    if (otp.code !== code) {
+      const updated = await this.prisma.otpCode.update({ where: { id: otp.id }, data: { attempts: otp.attempts + 1 } });
+      const remaining = OTP_MAX_VERIFY_ATTEMPTS - updated.attempts;
+      throw new UnauthorizedException(
+        remaining > 0 ? `Invalid OTP. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.` : 'Too many incorrect attempts. Please request a new OTP.',
+      );
+    }
 
     const user = await this.prisma.user.findUnique({ where: { mobile } });
     if (!user) throw new BadRequestException('User not found.');
 
     await this.prisma.otpCode.update({ where: { id: otp.id }, data: { verified: true } });
     const passwordHash = await bcrypt.hash(newPassword, 10);
-    await this.prisma.user.update({ where: { id: user.id }, data: { passwordHash } });
+    await this.prisma.user.update({ where: { id: user.id }, data: { passwordHash, failedLoginAttempts: 0, lockedUntil: null } });
 
     return { success: true, message: 'Password updated — you can log in now.' };
   }

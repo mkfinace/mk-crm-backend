@@ -201,6 +201,11 @@ const MIGRATIONS: { name: string; sql: string }[] = [
     name: 'sla_config_key_unique_index',
     sql: `CREATE UNIQUE INDEX IF NOT EXISTS "SlaConfig_key_key" ON "SlaConfig"("key");`,
   },
+  // ---- OTP brute-force protection ----
+  { name: 'otp_code_attempts_field', sql: `ALTER TABLE "OtpCode" ADD COLUMN IF NOT EXISTS "attempts" INTEGER NOT NULL DEFAULT 0;` },
+  // ---- Staff password login brute-force protection ----
+  { name: 'user_failed_login_attempts_field', sql: `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "failedLoginAttempts" INTEGER NOT NULL DEFAULT 0;` },
+  { name: 'user_locked_until_field', sql: `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "lockedUntil" TIMESTAMP(3);` },
 ];
 
 @Injectable()

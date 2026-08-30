@@ -32,6 +32,8 @@ model User {
   passwordHash String?
   role         UserRole
   status       String   @default("ACTIVE") // ACTIVE | INACTIVE
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
 
   dealerId String?
   dealer   Dealer? @relation(fields: [dealerId], references: [id])
@@ -65,6 +67,7 @@ model OtpCode {
   userId    String?
   user      User?    @relation(fields: [userId], references: [id])
   verified  Boolean  @default(false)
+  attempts  Int      @default(0)
   expiresAt DateTime
   createdAt DateTime @default(now())
 }
