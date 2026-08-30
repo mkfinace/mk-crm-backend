@@ -88,4 +88,11 @@ export class DealersService {
     }
     return this.getDealerBanks(dealerId);
   }
+
+  // Phase D — resolves which dealer a Dealer Manager belongs to, so Reports
+  // can be auto-scoped to just their own dealership.
+  async getDealerIdForManager(userId: string): Promise<string | null> {
+    const dm = await this.prisma.dealerManager.findUnique({ where: { userId } });
+    return dm?.dealerId || null;
+  }
 }

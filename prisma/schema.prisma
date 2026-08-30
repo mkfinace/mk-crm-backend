@@ -284,6 +284,10 @@ model Lead {
   specialRequirements   String?
   customerNotes         String?
 
+  // ---- Phase D: Deal Closure metadata ----
+  closedAt DateTime?
+  closedBy String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

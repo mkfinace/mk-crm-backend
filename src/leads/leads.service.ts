@@ -300,7 +300,24 @@ export class LeadsService {
     if (status === 'LOST' && !lostReasonId) {
       throw new BadRequestException('Lost reason is mandatory when marking a lead as LOST.');
     }
-    const before = await this.prisma.lead.findUnique({ where: { id } });
+    const before = await this.prisma.lead.findUnique({
+      where: { id },
+      include: { financeCase: true, booking: true, delivery: true },
+    });
+
+    // Deal Closure gating (Phase D) — CLOSED is only reachable once finance,
+    // booking, and delivery are all genuinely done, so "Closed Won" always
+    // means the same thing across every lead.
+    if (status === 'CLOSED') {
+      const missing: string[] = [];
+      if (before?.financeRequired && before.financeStatus !== 'FINANCE_COMPLETED') missing.push('Finance not completed');
+      if (!before?.booking) missing.push('No booking recorded');
+      if (!before?.delivery || before.delivery.status !== 'DELIVERED') missing.push('Vehicle not yet delivered');
+      if (missing.length > 0) {
+        throw new BadRequestException(`Cannot close this lead yet — ${missing.join('; ')}.`);
+      }
+    }
+
     const lead = await this.prisma.lead.update({
       where: { id },
       data: {
@@ -308,6 +325,7 @@ export class LeadsService {
         isHold: status === 'HOLD',
         isLost: status === 'LOST',
         lostReasonId: status === 'LOST' ? lostReasonId : null,
+        ...(status === 'CLOSED' ? { closedAt: new Date(), closedBy: userId } : {}),
       },
     });
     await this.logActivity(id, userId, 'SALES_STATUS_UPDATED', { status });

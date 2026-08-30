@@ -14,10 +14,10 @@ function dateFilter(from?: string, to?: string) {
 export class ReportsService {
   constructor(private prisma: PrismaService) {}
 
-  async salesReport(from?: string, to?: string) {
+  async salesReport(from?: string, to?: string, dealerId?: string) {
     const createdAt = dateFilter(from, to);
     const leads = await this.prisma.lead.findMany({
-      where: createdAt ? { createdAt } : undefined,
+      where: { ...(createdAt ? { createdAt } : {}), ...(dealerId ? { dealerId } : {}) },
       include: { brand: true, model: true, lostReason: true },
     });
 
@@ -58,13 +58,13 @@ export class ReportsService {
     };
   }
 
-  async financeReport(from?: string, to?: string) {
+  async financeReport(from?: string, to?: string, dealerId?: string) {
     const createdAt = dateFilter(from, to);
     const leads = await this.prisma.lead.findMany({
-      where: { financeRequired: true, ...(createdAt ? { createdAt } : {}) },
+      where: { financeRequired: true, ...(createdAt ? { createdAt } : {}), ...(dealerId ? { dealerId } : {}) },
     });
     const cases = await this.prisma.financeCase.findMany({
-      where: createdAt ? { createdAt } : undefined,
+      where: { ...(createdAt ? { createdAt } : {}), ...(dealerId ? { lead: { dealerId } } : {}) },
       include: { bank: true },
     });
 
@@ -106,15 +106,34 @@ export class ReportsService {
     };
   }
 
-  async dealerPerformanceReport(from?: string, to?: string) {
+  // dealerIds: when set, scopes the whole report to just those dealer(s) —
+  // used for a Dealer Manager's own "My Team" view so they only ever see
+  // their own dealership's numbers, never another dealer's.
+  async dealerPerformanceReport(from?: string, to?: string, dealerIds?: string[]) {
     const createdAt = dateFilter(from, to);
     const leads = await this.prisma.lead.findMany({
-      where: { dealerId: { not: null }, ...(createdAt ? { createdAt } : {}) },
-      include: { dealer: true, dealerExecutive: true },
+      where: {
+        dealerId: dealerIds && dealerIds.length > 0 ? { in: dealerIds } : { not: null },
+        ...(createdAt ? { createdAt } : {}),
+      },
+      include: {
+        dealer: true, dealerExecutive: true,
+        quotations: true, testDrives: true, booking: true, followUps: true, financeCase: true,
+      },
     });
 
     const byDealer: Record<string, { dealerName: string; total: number; closed: number; lost: number; conversionRate: number }> = {};
-    const byExecutive: Record<string, { execName: string; dealerName: string; total: number; closed: number; lost: number; conversionRate: number }> = {};
+    const byExecutive: Record<
+      string,
+      {
+        execName: string; dealerName: string; total: number; closed: number; lost: number; conversionRate: number;
+        firstContactCount: number; firstContactPct: number;
+        quotations: number; testDrives: number; bookings: number;
+        avgClosureDays: number | null; financeConversion: number | null;
+        _closureDaysSum: number; _closedWithClosureCount: number;
+        _financeLeadsTotal: number; _financeCompleted: number;
+      }
+    > = {};
 
     for (const l of leads) {
       if (l.dealerId) {
@@ -125,11 +144,32 @@ export class ReportsService {
       }
       if (l.dealerExecutiveId) {
         if (!byExecutive[l.dealerExecutiveId]) {
-          byExecutive[l.dealerExecutiveId] = { execName: l.dealerExecutive?.name || 'Unknown', dealerName: l.dealer?.name || 'Unknown', total: 0, closed: 0, lost: 0, conversionRate: 0 };
+          byExecutive[l.dealerExecutiveId] = {
+            execName: l.dealerExecutive?.name || 'Unknown', dealerName: l.dealer?.name || 'Unknown',
+            total: 0, closed: 0, lost: 0, conversionRate: 0,
+            firstContactCount: 0, firstContactPct: 0,
+            quotations: 0, testDrives: 0, bookings: 0,
+            avgClosureDays: null, financeConversion: null,
+            _closureDaysSum: 0, _closedWithClosureCount: 0,
+            _financeLeadsTotal: 0, _financeCompleted: 0,
+          };
         }
-        byExecutive[l.dealerExecutiveId].total++;
-        if (l.salesStatus === 'CLOSED') byExecutive[l.dealerExecutiveId].closed++;
-        if (l.isLost) byExecutive[l.dealerExecutiveId].lost++;
+        const e = byExecutive[l.dealerExecutiveId];
+        e.total++;
+        if (l.salesStatus === 'CLOSED') e.closed++;
+        if (l.isLost) e.lost++;
+        if (l.followUps && l.followUps.length > 0) e.firstContactCount++;
+        e.quotations += l.quotations?.length || 0;
+        e.testDrives += l.testDrives?.length || 0;
+        if (l.booking) e.bookings++;
+        if (l.closedAt) {
+          e._closureDaysSum += (new Date(l.closedAt).getTime() - new Date(l.createdAt).getTime()) / 86400000;
+          e._closedWithClosureCount++;
+        }
+        if (l.financeRequired) {
+          e._financeLeadsTotal++;
+          if (l.financeStatus === 'FINANCE_COMPLETED') e._financeCompleted++;
+        }
       }
     }
 
@@ -138,6 +178,13 @@ export class ReportsService {
     }
     for (const e of Object.values(byExecutive)) {
       e.conversionRate = e.total > 0 ? Math.round((e.closed / e.total) * 1000) / 10 : 0;
+      e.firstContactPct = e.total > 0 ? Math.round((e.firstContactCount / e.total) * 1000) / 10 : 0;
+      e.avgClosureDays = e._closedWithClosureCount > 0 ? Math.round((e._closureDaysSum / e._closedWithClosureCount) * 10) / 10 : null;
+      e.financeConversion = e._financeLeadsTotal > 0 ? Math.round((e._financeCompleted / e._financeLeadsTotal) * 1000) / 10 : null;
+      delete (e as any)._closureDaysSum;
+      delete (e as any)._closedWithClosureCount;
+      delete (e as any)._financeLeadsTotal;
+      delete (e as any)._financeCompleted;
     }
 
     return {

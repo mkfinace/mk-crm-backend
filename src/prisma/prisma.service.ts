@@ -153,6 +153,9 @@ const MIGRATIONS: { name: string; sql: string }[] = [
       "resolvedAt" TIMESTAMP(3)
     );`,
   },
+  // ---- Phase D: Deal Closure metadata ----
+  { name: 'lead_closed_at_field', sql: `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "closedAt" TIMESTAMP(3);` },
+  { name: 'lead_closed_by_field', sql: `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "closedBy" TEXT;` },
 ];
 
 @Injectable()
