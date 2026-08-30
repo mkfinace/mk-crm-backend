@@ -45,6 +45,23 @@ export class LeadsController {
   // Registered before ':id' for the same reason as the 'my' routes above.
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(...STAFF_ROLES)
+  // Configurable SLA rules (e.g. First Contact hours, Same-Day Deal
+  // target) — any staff can read (needed to render the Deal Command
+  // Bar); only admins can change the thresholds.
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...STAFF_ROLES)
+  @Get('sla-config')
+  getSlaConfig() {
+    return this.leadsService.getSlaConfig();
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN', 'SALES_ADMIN', 'FINANCE_ADMIN')
+  @Put('sla-config/:key')
+  updateSlaConfig(@Param('key') key: string, @Body('hours') hours: number, @Req() req: any) {
+    return this.leadsService.updateSlaConfig(key, Number(hours), req.user.sub);
+  }
+
   @Get('follow-ups/dashboard')
   getFollowUpDashboard(
     @Query('dealerExecutiveId') dealerExecutiveId?: string,
@@ -129,8 +146,8 @@ export class LeadsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(...STAFF_ROLES)
   @Put(':id/blocker')
-  updateBlocker(@Param('id') id: string, @Body('blocker') blocker: string | null, @Req() req: any) {
-    return this.leadsService.updateBlocker(id, blocker, req.user.sub);
+  updateBlocker(@Param('id') id: string, @Body() data: { blocker: string | null; blockerCategory?: string | null }, @Req() req: any) {
+    return this.leadsService.updateBlocker(id, data.blocker, data.blockerCategory ?? null, req.user.sub);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

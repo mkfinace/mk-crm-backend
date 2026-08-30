@@ -203,6 +203,16 @@ model SiteSetting {
   updatedAt DateTime @updatedAt
 }
 
+// Configurable SLA rules (e.g. first-contact window, same-day-deal target)
+// — admin-editable hours per named rule, instead of hardcoded constants.
+model SlaConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  label     String
+  hours     Int
+  updatedAt DateTime @updatedAt
+}
+
 // ==================== CUSTOMER & LEAD ====================
 
 model Customer {
@@ -293,6 +303,7 @@ model Lead {
   nextActionOwner   String?
   nextActionDueAt   DateTime?
   blocker           String?
+  blockerCategory   String?
 
   // ---- Same-Day Deal Mode ----
   sameDayDeal        Boolean   @default(false)

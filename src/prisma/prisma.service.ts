@@ -185,6 +185,22 @@ const MIGRATIONS: { name: string; sql: string }[] = [
       "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
     );`,
   },
+  // ---- Blocker taxonomy + configurable SLA ----
+  { name: 'lead_blocker_category_field', sql: `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "blockerCategory" TEXT;` },
+  {
+    name: 'sla_config_table',
+    sql: `CREATE TABLE IF NOT EXISTS "SlaConfig" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "key" TEXT NOT NULL,
+      "label" TEXT NOT NULL,
+      "hours" INTEGER NOT NULL,
+      "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );`,
+  },
+  {
+    name: 'sla_config_key_unique_index',
+    sql: `CREATE UNIQUE INDEX IF NOT EXISTS "SlaConfig_key_key" ON "SlaConfig"("key");`,
+  },
 ];
 
 @Injectable()

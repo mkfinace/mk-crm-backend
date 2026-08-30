@@ -379,11 +379,49 @@ export class LeadsService {
     return updated;
   }
 
-  async updateBlocker(id: string, blocker: string | null, userId: string) {
+  async updateBlocker(id: string, blocker: string | null, blockerCategory: string | null, userId: string) {
     const lead = await this.prisma.lead.findUnique({ where: { id } });
     if (!lead) throw new NotFoundException('Lead not found.');
-    const updated = await this.prisma.lead.update({ where: { id }, data: { blocker: blocker || null } });
-    await this.logActivity(id, userId, blocker ? 'BLOCKER_SET' : 'BLOCKER_CLEARED', { blocker });
+    const nextCategory = blocker ? (blockerCategory || 'OTHER') : null;
+    const updated = await this.prisma.lead.update({
+      where: { id },
+      data: { blocker: blocker || null, blockerCategory: nextCategory },
+    });
+    await this.logActivity(id, userId, blocker ? 'BLOCKER_SET' : 'BLOCKER_CLEARED', { blocker, blockerCategory: nextCategory });
+    await this.auditLogs.logAction(userId, 'Lead', id, blocker ? 'BLOCKER_SET' : 'BLOCKER_CLEARED',
+      { blocker: lead.blocker, blockerCategory: lead.blockerCategory }, { blocker, blockerCategory: nextCategory });
+    return updated;
+  }
+
+  // ==================== Configurable SLA rules ====================
+  // Seeded on first read so the app keeps working with sane defaults
+  // (matching what was previously hardcoded) until an admin edits one.
+  private static readonly SLA_DEFAULTS = [
+    { key: 'FIRST_CONTACT', label: 'First Contact (from lead creation)', hours: 24 },
+    { key: 'SAME_DAY_DEAL_TARGET', label: 'Same-Day Deal target close time', hours: 6 },
+  ];
+
+  async getSlaConfig() {
+    for (const d of LeadsService.SLA_DEFAULTS) {
+      const existing = await this.prisma.slaConfig.findUnique({ where: { key: d.key } });
+      if (!existing) {
+        await this.prisma.slaConfig.create({ data: d });
+      }
+    }
+    const rows = await this.prisma.slaConfig.findMany({ orderBy: { key: 'asc' } });
+    return rows;
+  }
+
+  async updateSlaConfig(key: string, hours: number, userId: string) {
+    if (!Number.isFinite(hours) || hours <= 0) throw new NotFoundException('Hours must be a positive number.');
+    const fallback = LeadsService.SLA_DEFAULTS.find((d) => d.key === key);
+    const before = await this.prisma.slaConfig.findUnique({ where: { key } });
+    const updated = await this.prisma.slaConfig.upsert({
+      where: { key },
+      update: { hours },
+      create: { key, label: fallback?.label || key, hours },
+    });
+    await this.auditLogs.logAction(userId, 'SlaConfig', key, 'SLA_CONFIG_UPDATED', { hours: before?.hours }, { hours });
     return updated;
   }
 
