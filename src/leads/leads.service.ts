@@ -155,8 +155,8 @@ export class LeadsService {
     colourPreference?: string;
     specialRequirements?: string;
     customerNotes?: string;
-  }) {
-    const lead = await this.prisma.lead.findUnique({ where: { id } });
+  }, changedBy?: string) {
+    const lead = await this.prisma.lead.findUnique({ where: { id }, include: { customer: true } });
     if (!lead) throw new NotFoundException('Lead not found.');
 
     if (data.customerName || data.customerMobile || data.city) {
@@ -194,12 +194,23 @@ export class LeadsService {
       },
       include: { customer: true, brand: true, model: true, variant: true },
     });
+    if (changedBy) {
+      await this.auditLogs.logAction(changedBy, 'Lead', id, 'LEAD_DETAILS_UPDATED',
+        {
+          customerName: lead.customer?.name, customerMobile: lead.customer?.mobile, city: lead.customer?.city,
+          budget: lead.budget, temperature: lead.temperature, financeRequired: lead.financeRequired,
+        },
+        {
+          customerName: data.customerName, customerMobile: data.customerMobile, city: data.city,
+          budget: data.budget, temperature: data.temperature, financeRequired: data.financeRequired,
+        });
+    }
     this.realtime.notifyLeadUpdated(id);
     return updated;
   }
 
-  async deleteLead(id: string) {
-    const lead = await this.prisma.lead.findUnique({ where: { id } });
+  async deleteLead(id: string, deletedBy?: string) {
+    const lead = await this.prisma.lead.findUnique({ where: { id }, include: { customer: true } });
     if (!lead) throw new NotFoundException('Lead not found.');
     try {
       await this.prisma.activity.deleteMany({ where: { leadId: id } });
@@ -216,7 +227,11 @@ export class LeadsService {
         await this.prisma.financeStatusHistory.deleteMany({ where: { financeCaseId: financeCase.id } });
         await this.prisma.financeCase.delete({ where: { id: financeCase.id } });
       }
-      return await this.prisma.lead.delete({ where: { id } });
+      const result = await this.prisma.lead.delete({ where: { id } });
+      if (deletedBy) {
+        await this.auditLogs.logAction(deletedBy, 'Lead', id, 'LEAD_DELETED', { leadCode: lead.leadCode, customerName: lead.customer?.name }, undefined);
+      }
+      return result;
     } catch (e) {
       throw new BadRequestException('Could not delete this lead due to linked records.');
     }
@@ -357,6 +372,7 @@ export class LeadsService {
       data: { leadId, userId, type: data.type, result: data.result, notes: data.notes, nextFollowUpAt: new Date(data.nextFollowUpAt) },
     });
     await this.logActivity(leadId, userId, 'FOLLOW_UP_ADDED', { type: data.type, result: data.result });
+    await this.auditLogs.logAction(userId, 'Lead', leadId, 'FOLLOW_UP_ADDED', undefined, { type: data.type, result: data.result, nextFollowUpAt: data.nextFollowUpAt });
     this.realtime.notifyLeadUpdated(leadId);
     return followUp;
   }
@@ -384,6 +400,9 @@ export class LeadsService {
       },
     });
     await this.logActivity(id, userId, 'NEXT_ACTION_UPDATED', { nextAction: data.nextAction, owner: data.nextActionOwner });
+    await this.auditLogs.logAction(userId, 'Lead', id, 'NEXT_ACTION_UPDATED',
+      { nextAction: lead.nextAction, nextActionOwner: lead.nextActionOwner, nextActionDueAt: lead.nextActionDueAt },
+      { nextAction: data.nextAction, nextActionOwner: data.nextActionOwner, nextActionDueAt: data.nextActionDueAt });
     this.realtime.notifyLeadUpdated(id);
     return updated;
   }
@@ -446,6 +465,7 @@ export class LeadsService {
       },
     });
     await this.logActivity(id, userId, sameDayDeal ? 'SAME_DAY_DEAL_MARKED' : 'SAME_DAY_DEAL_UNMARKED');
+    await this.auditLogs.logAction(userId, 'Lead', id, sameDayDeal ? 'SAME_DAY_DEAL_MARKED' : 'SAME_DAY_DEAL_UNMARKED', { sameDayDeal: lead.sameDayDeal }, { sameDayDeal });
     this.realtime.notifyLeadUpdated(id);
     return updated;
   }
@@ -518,7 +538,13 @@ export class LeadsService {
           orderBy: { createdAt: 'desc' },
         },
         financeCase: {
-          select: { bank: { select: { name: true } }, loanAmount: true, downPayment: true, tenureMonths: true, roi: true, emi: true, stage: true, createdAt: true },
+          select: {
+            bank: { select: { name: true } }, loanAmount: true, downPayment: true, tenureMonths: true, roi: true, emi: true, stage: true, createdAt: true,
+            bankQueries: {
+              select: { id: true, query: true, requestedDocument: true, dueDate: true, status: true, resolutionNotes: true, createdAt: true, resolvedAt: true },
+              orderBy: { createdAt: 'desc' },
+            },
+          },
         },
         booking: true,
         delivery: true,
