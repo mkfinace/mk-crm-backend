@@ -293,6 +293,38 @@ const MIGRATIONS: { name: string; sql: string }[] = [
     );`,
   },
   { name: 'variant_price_variant_index', sql: `CREATE INDEX IF NOT EXISTS "VariantPrice_variantId_idx" ON "VariantPrice"("variantId");` },
+  // ---- Offers & Warranty ----
+  {
+    name: 'offer_table',
+    sql: `CREATE TABLE IF NOT EXISTS "Offer" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "title" TEXT NOT NULL,
+      "description" TEXT,
+      "discountType" TEXT NOT NULL,
+      "discountValue" DOUBLE PRECISION NOT NULL,
+      "brandId" TEXT,
+      "modelId" TEXT,
+      "variantId" TEXT,
+      "validFrom" TIMESTAMP(3) NOT NULL,
+      "validTo" TIMESTAMP(3) NOT NULL,
+      "status" TEXT NOT NULL DEFAULT 'ACTIVE',
+      "createdBy" TEXT,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );`,
+  },
+  {
+    name: 'warranty_table',
+    sql: `CREATE TABLE IF NOT EXISTS "Warranty" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "variantId" TEXT NOT NULL,
+      "standardYears" INTEGER NOT NULL,
+      "standardKm" INTEGER NOT NULL,
+      "extendedOptionsJson" TEXT,
+      "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );`,
+  },
+  { name: 'warranty_variant_unique_index', sql: `CREATE UNIQUE INDEX IF NOT EXISTS "Warranty_variantId_key" ON "Warranty"("variantId");` },
 ];
 
 @Injectable()

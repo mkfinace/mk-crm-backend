@@ -28,6 +28,8 @@ import { PermissionsModule } from './permissions/permissions.module';
 import { FeaturesModule } from './features/features.module';
 import { ColoursModule } from './colours/colours.module';
 import { PricingModule } from './pricing/pricing.module';
+import { OffersModule } from './offers/offers.module';
+import { WarrantyModule } from './warranty/warranty.module';
 
 @Module({
   imports: [
@@ -55,6 +57,8 @@ import { PricingModule } from './pricing/pricing.module';
     FeaturesModule,
     ColoursModule,
     PricingModule,
+    OffersModule,
+    WarrantyModule,
     SiteSettingsModule,
     ReportsModule,
     NegotiationsModule,
