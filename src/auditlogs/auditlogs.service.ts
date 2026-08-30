@@ -12,6 +12,7 @@ export class AuditLogsService {
         ...(filters.entityId ? { entityId: filters.entityId } : {}),
         ...(filters.userId ? { userId: filters.userId } : {}),
       },
+      include: { user: { select: { id: true, name: true, role: true } } },
       orderBy: { createdAt: 'desc' },
       take: 200,
     });
