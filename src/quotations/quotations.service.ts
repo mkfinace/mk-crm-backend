@@ -21,6 +21,10 @@ export class QuotationsService {
     exchangeBonus?: number;
     dealerOffer?: number;
     manufacturerOffer?: number;
+    tcs?: number;
+    extraWarranty?: number;
+    fastag?: number;
+    crtmCharges?: number;
   }) {
     const lead = await this.prisma.lead.findUnique({ where: { id: data.leadId } });
     if (!lead) throw new NotFoundException('Lead not found.');
@@ -47,6 +51,10 @@ export class QuotationsService {
         exchangeBonus: data.exchangeBonus,
         dealerOffer: data.dealerOffer,
         manufacturerOffer: data.manufacturerOffer,
+        tcs: data.tcs,
+        extraWarranty: data.extraWarranty,
+        fastag: data.fastag,
+        crtmCharges: data.crtmCharges,
       },
     });
   }

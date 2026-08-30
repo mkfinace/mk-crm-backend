@@ -460,6 +460,10 @@ model Quotation {
   exchangeBonus     Float?
   dealerOffer       Float?
   manufacturerOffer Float?
+  tcs               Float?
+  extraWarranty     Float?
+  fastag            Float?
+  crtmCharges       Float?
 }
 
 // ---- Phase B: Negotiation ----

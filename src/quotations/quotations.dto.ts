@@ -74,4 +74,24 @@ export class CreateQuotationDto {
   @IsNumber()
   @IsOptional()
   manufacturerOffer?: number;
+
+  @ApiPropertyOptional({ example: 8000 })
+  @IsNumber()
+  @IsOptional()
+  tcs?: number;
+
+  @ApiPropertyOptional({ example: 15000 })
+  @IsNumber()
+  @IsOptional()
+  extraWarranty?: number;
+
+  @ApiPropertyOptional({ example: 500 })
+  @IsNumber()
+  @IsOptional()
+  fastag?: number;
+
+  @ApiPropertyOptional({ example: 2000 })
+  @IsNumber()
+  @IsOptional()
+  crtmCharges?: number;
 }

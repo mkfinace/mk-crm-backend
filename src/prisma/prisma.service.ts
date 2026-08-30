@@ -115,6 +115,10 @@ const MIGRATIONS: { name: string; sql: string }[] = [
   { name: 'quotation_exchange_bonus_field', sql: `ALTER TABLE "Quotation" ADD COLUMN IF NOT EXISTS "exchangeBonus" DOUBLE PRECISION;` },
   { name: 'quotation_dealer_offer_field', sql: `ALTER TABLE "Quotation" ADD COLUMN IF NOT EXISTS "dealerOffer" DOUBLE PRECISION;` },
   { name: 'quotation_manufacturer_offer_field', sql: `ALTER TABLE "Quotation" ADD COLUMN IF NOT EXISTS "manufacturerOffer" DOUBLE PRECISION;` },
+  { name: 'quotation_tcs_field', sql: `ALTER TABLE "Quotation" ADD COLUMN IF NOT EXISTS "tcs" DOUBLE PRECISION;` },
+  { name: 'quotation_extra_warranty_field', sql: `ALTER TABLE "Quotation" ADD COLUMN IF NOT EXISTS "extraWarranty" DOUBLE PRECISION;` },
+  { name: 'quotation_fastag_field', sql: `ALTER TABLE "Quotation" ADD COLUMN IF NOT EXISTS "fastag" DOUBLE PRECISION;` },
+  { name: 'quotation_crtm_charges_field', sql: `ALTER TABLE "Quotation" ADD COLUMN IF NOT EXISTS "crtmCharges" DOUBLE PRECISION;` },
   // ---- Phase B: Negotiation table ----
   {
     name: 'negotiation_table',
