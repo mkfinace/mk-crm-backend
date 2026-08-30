@@ -294,6 +294,10 @@ model Lead {
   nextActionDueAt   DateTime?
   blocker           String?
 
+  // ---- Same-Day Deal Mode ----
+  sameDayDeal        Boolean   @default(false)
+  sameDayDealStartedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -302,6 +306,7 @@ model Lead {
   activities         Activity[]
   quotations         Quotation[]
   negotiations       Negotiation[]
+  financeApplications FinanceApplication[]
   testDrives         TestDrive[]
   documents          Document[]
   financeCase        FinanceCase?
@@ -384,6 +389,26 @@ model Bank {
   leads      Lead[]
   financeCases FinanceCase[]
   dealerBanks DealerBank[]
+  financeApplications FinanceApplication[]
+}
+
+// ---- Priority B: Multi-Bank Applications — a Finance Executive can shop a
+// lead's finance requirement to several banks in parallel before settling
+// on one and creating the actual FinanceCase with that bank.
+model FinanceApplication {
+  id                String   @id @default(cuid())
+  leadId            String
+  lead              Lead     @relation(fields: [leadId], references: [id])
+  bankId            String
+  bank              Bank     @relation(fields: [bankId], references: [id])
+  applicationNumber String?
+  loginDate         DateTime?
+  loanAmount        Float?
+  tenureMonths      Int?
+  status            String   @default("LOGIN_PENDING") // LOGIN_PENDING, LOGIN_DONE, QUERY, SANCTION, REJECTED, WITHDRAWN
+  executiveId       String?
+  notes             String?
+  createdAt         DateTime @default(now())
 }
 
 model BankBranch {

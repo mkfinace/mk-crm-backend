@@ -22,6 +22,7 @@ import { VehiclesModule } from './vehicles/vehicles.module';
 import { SiteSettingsModule } from './site-settings/site-settings.module';
 import { ReportsModule } from './reports/reports.module';
 import { NegotiationsModule } from './negotiations/negotiations.module';
+import { FinanceApplicationsModule } from './financeapplications/financeapplications.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { NegotiationsModule } from './negotiations/negotiations.module';
     SiteSettingsModule,
     ReportsModule,
     NegotiationsModule,
+    FinanceApplicationsModule,
   ],
   controllers: [AppController],
 })

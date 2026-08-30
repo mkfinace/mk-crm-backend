@@ -132,4 +132,11 @@ export class LeadsController {
   updateBlocker(@Param('id') id: string, @Body('blocker') blocker: string | null, @Req() req: any) {
     return this.leadsService.updateBlocker(id, blocker, req.user.sub);
   }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...STAFF_ROLES)
+  @Put(':id/same-day-deal')
+  setSameDayDeal(@Param('id') id: string, @Body('sameDayDeal') sameDayDeal: boolean, @Req() req: any) {
+    return this.leadsService.setSameDayDeal(id, !!sameDayDeal, req.user.sub);
+  }
 }

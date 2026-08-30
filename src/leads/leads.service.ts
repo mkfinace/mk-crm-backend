@@ -387,6 +387,20 @@ export class LeadsService {
     return updated;
   }
 
+  async setSameDayDeal(id: string, sameDayDeal: boolean, userId: string) {
+    const lead = await this.prisma.lead.findUnique({ where: { id } });
+    if (!lead) throw new NotFoundException('Lead not found.');
+    const updated = await this.prisma.lead.update({
+      where: { id },
+      data: {
+        sameDayDeal,
+        sameDayDealStartedAt: sameDayDeal ? (lead.sameDayDealStartedAt || new Date()) : lead.sameDayDealStartedAt,
+      },
+    });
+    await this.logActivity(id, userId, sameDayDeal ? 'SAME_DAY_DEAL_MARKED' : 'SAME_DAY_DEAL_UNMARKED');
+    return updated;
+  }
+
   async getFollowUpDashboard(filters: { dealerExecutiveId?: string; financeExecutiveId?: string }) {
     const leads = await this.prisma.lead.findMany({
       where: {

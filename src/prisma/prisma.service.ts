@@ -167,6 +167,24 @@ const MIGRATIONS: { name: string; sql: string }[] = [
   { name: 'lead_next_action_owner_field', sql: `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "nextActionOwner" TEXT;` },
   { name: 'lead_next_action_due_field', sql: `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "nextActionDueAt" TIMESTAMP(3);` },
   { name: 'lead_blocker_field', sql: `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "blocker" TEXT;` },
+  { name: 'lead_same_day_deal_field', sql: `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "sameDayDeal" BOOLEAN NOT NULL DEFAULT false;` },
+  { name: 'lead_same_day_deal_started_field', sql: `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "sameDayDealStartedAt" TIMESTAMP(3);` },
+  {
+    name: 'finance_application_table',
+    sql: `CREATE TABLE IF NOT EXISTS "FinanceApplication" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "leadId" TEXT NOT NULL,
+      "bankId" TEXT NOT NULL,
+      "applicationNumber" TEXT,
+      "loginDate" TIMESTAMP(3),
+      "loanAmount" DOUBLE PRECISION,
+      "tenureMonths" INTEGER,
+      "status" TEXT NOT NULL DEFAULT 'LOGIN_PENDING',
+      "executiveId" TEXT,
+      "notes" TEXT,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );`,
+  },
 ];
 
 @Injectable()
