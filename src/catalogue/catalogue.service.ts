@@ -178,7 +178,10 @@ export class CatalogueService {
             variants: {
               include: {
                 fieldValues: { include: { field: { include: { category: true } } } },
-                vehicles: true,
+                vehicles: { include: { vehicleColours: { include: { colour: true } } } },
+                variantFeatures: { include: { feature: true } },
+                warranty: true,
+                offers: { where: { status: 'ACTIVE' } },
               },
             },
           },
@@ -192,6 +195,7 @@ export class CatalogueService {
     const model = brand.models.find((m) => slugify(m.name) === modelSlug);
     if (!model) throw new NotFoundException('Model not found.');
 
+    const now = new Date();
     return {
       brand: { id: brand.id, name: brand.name, logoUrl: brand.logoUrl },
       model: { id: model.id, name: model.name, category: model.category, metaTitle: model.metaTitle, metaDescription: model.metaDescription },
@@ -201,8 +205,6 @@ export class CatalogueService {
         fuelType: v.fuelType,
         transmission: v.transmission,
         exShowroomPrice: v.exShowroomPrice,
-        featuresJson: v.featuresJson,
-        specsJson: v.specsJson,
         specs: v.fieldValues
           .filter((fv) => fv.field.customerVisible)
           .map((fv) => ({
@@ -218,12 +220,26 @@ export class CatalogueService {
             valueBoolean: fv.valueBoolean,
             displayOrder: fv.field.displayOrder,
           })),
+        // Reusable Feature Library assignments (Phase 1) — falls back to
+        // nothing if none have been assigned yet for this variant.
+        features: v.variantFeatures
+          .filter((vf) => vf.applicability !== 'NOT_AVAILABLE')
+          .map((vf) => ({ name: vf.feature.name, category: vf.feature.category, icon: vf.feature.icon, applicability: vf.applicability })),
+        // Reusable Colour Library assignments, falling back to the older
+        // free-text colourOptionsJson only if nothing's been picked from
+        // the library yet for this vehicle.
         vehicle: v.vehicles[0]
           ? {
-              colours: v.vehicles[0].colourOptionsJson ? JSON.parse(v.vehicles[0].colourOptionsJson) : [],
+              colours: v.vehicles[0].vehicleColours.length > 0
+                ? v.vehicles[0].vehicleColours.map((vc) => ({ name: vc.colour.name, hex: vc.colour.hexCode, imageUrl: vc.imageUrl, isDefault: vc.isDefault }))
+                : (v.vehicles[0].colourOptionsJson ? JSON.parse(v.vehicles[0].colourOptionsJson) : []),
               images: v.vehicles[0].imagesJson ? JSON.parse(v.vehicles[0].imagesJson) : [],
             }
           : { colours: [], images: [] },
+        warranty: v.warranty ? { standardYears: v.warranty.standardYears, standardKm: v.warranty.standardKm, extendedOptions: v.warranty.extendedOptionsJson ? JSON.parse(v.warranty.extendedOptionsJson) : [] } : null,
+        offers: v.offers
+          .filter((o) => o.validFrom <= now && o.validTo >= now)
+          .map((o) => ({ title: o.title, description: o.description, discountType: o.discountType, discountValue: o.discountValue, validTo: o.validTo })),
       })),
     };
   }
