@@ -86,6 +86,17 @@ export class DynamicFieldsService {
     });
   }
 
+  // Public — the website's listing page uses this to build its filter
+  // sidebar from whatever fields the admin has flagged as filterable,
+  // instead of a hardcoded set of columns.
+  listFilterableFields() {
+    return this.prisma.fieldDefinition.findMany({
+      where: { status: 'ACTIVE', filterEnabled: true },
+      orderBy: { displayOrder: 'asc' },
+      include: { options: true, category: true },
+    });
+  }
+
   listArchivedFields() {
     return this.prisma.fieldDefinition.findMany({
       where: { status: 'ARCHIVED' },

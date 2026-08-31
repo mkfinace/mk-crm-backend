@@ -39,11 +39,11 @@ export class CatalogueService {
     });
   }
 
-  createModel(data: { brandId: string; name: string; category?: string }) {
+  createModel(data: { brandId: string; name: string; category?: string; metaTitle?: string; metaDescription?: string }) {
     return this.prisma.model.create({ data });
   }
 
-  async updateModel(id: string, data: { brandId?: string; name?: string; category?: string }) {
+  async updateModel(id: string, data: { brandId?: string; name?: string; category?: string; metaTitle?: string; metaDescription?: string }) {
     const model = await this.prisma.model.findUnique({ where: { id } });
     if (!model) throw new NotFoundException('Model not found.');
     return this.prisma.model.update({ where: { id }, data });
@@ -151,7 +151,14 @@ export class CatalogueService {
       include: {
         models: {
           where: { status: 'ACTIVE' },
-          include: { variants: { include: { vehicles: true } } },
+          include: {
+            variants: {
+              include: {
+                vehicles: true,
+                fieldValues: { include: { field: true } },
+              },
+            },
+          },
         },
       },
     });
@@ -187,7 +194,7 @@ export class CatalogueService {
 
     return {
       brand: { id: brand.id, name: brand.name, logoUrl: brand.logoUrl },
-      model: { id: model.id, name: model.name, category: model.category },
+      model: { id: model.id, name: model.name, category: model.category, metaTitle: model.metaTitle, metaDescription: model.metaDescription },
       variants: model.variants.map((v) => ({
         id: v.id,
         name: v.name,
