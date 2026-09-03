@@ -71,7 +71,7 @@ export class QuotationsService {
     });
   }
 
-  async deleteQuotation(id: string) {
+  async deleteQuotation(id: string, _changedBy?: string) {
     const quotation = await this.prisma.quotation.findUnique({ where: { id } });
     if (!quotation) throw new NotFoundException('Quotation not found.');
     const deleted = await this.prisma.quotation.delete({ where: { id } });

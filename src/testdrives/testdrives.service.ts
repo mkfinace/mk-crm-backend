@@ -8,7 +8,7 @@ const TEST_DRIVE_STATUSES = ['SCHEDULED', 'COMPLETED', 'CANCELLED'];
 export class TestDrivesService {
   constructor(private prisma: PrismaService, private realtime: RealtimeGateway) {}
 
-  async createTestDrive(data: { leadId: string; scheduledAt: string }) {
+  async createTestDrive(data: { leadId: string; scheduledAt: string }, _changedBy?: string) {
     const lead = await this.prisma.lead.findUnique({ where: { id: data.leadId } });
     if (!lead) throw new NotFoundException('Lead not found.');
     const testDrive = await this.prisma.testDrive.create({
@@ -25,7 +25,7 @@ export class TestDrivesService {
     });
   }
 
-  async updateTestDrive(id: string, data: { scheduledAt?: string; status?: string; feedback?: string }) {
+  async updateTestDrive(id: string, data: { scheduledAt?: string; status?: string; feedback?: string }, _changedBy?: string) {
     const testDrive = await this.prisma.testDrive.findUnique({ where: { id } });
     if (!testDrive) throw new NotFoundException('Test drive not found.');
     if (data.status && !TEST_DRIVE_STATUSES.includes(data.status)) {
@@ -43,7 +43,7 @@ export class TestDrivesService {
     return updated;
   }
 
-  async deleteTestDrive(id: string) {
+  async deleteTestDrive(id: string, _changedBy?: string) {
     const testDrive = await this.prisma.testDrive.findUnique({ where: { id } });
     if (!testDrive) throw new NotFoundException('Test drive not found.');
     const deleted = await this.prisma.testDrive.delete({ where: { id } });
