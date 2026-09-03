@@ -12,6 +12,27 @@ import { RequirePermission } from '../permissions/permissions.decorator';
 export class TestDrivesController {
   constructor(private testDrivesService: TestDrivesService) {}
 
+  // ---- Customer Portal (self-service, own test drives only) ----
+  // Registered before the ':id' routes below so "my" doesn't get matched
+  // as an :id parameter — same pattern as leads.controller.ts.
+  @RequirePermission('portal.access')
+  @Get('my')
+  listMyTestDrives(@Req() req: any) {
+    return this.testDrivesService.listMyTestDrives(req.user.sub);
+  }
+
+  @RequirePermission('portal.access')
+  @Post('my')
+  createMyTestDrive(@Req() req: any, @Body() data: CreateTestDriveDto) {
+    return this.testDrivesService.createMyTestDrive(req.user.sub, data);
+  }
+
+  @RequirePermission('portal.access')
+  @Put('my/:id/cancel')
+  cancelMyTestDrive(@Req() req: any, @Param('id') id: string) {
+    return this.testDrivesService.cancelMyTestDrive(req.user.sub, id);
+  }
+
   @RequirePermission('test_drives.manage')
   @Post()
   createTestDrive(@Body() data: CreateTestDriveDto, @Req() req: any) {

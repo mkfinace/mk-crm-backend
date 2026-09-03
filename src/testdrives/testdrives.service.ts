@@ -25,6 +25,33 @@ export class TestDrivesService {
     });
   }
 
+  // ---- Customer Portal (self-service, own test drives only) ----
+  async listMyTestDrives(customerId: string) {
+    return this.prisma.testDrive.findMany({
+      where: { lead: { customerId } },
+      include: { lead: { include: { brand: true, model: true, variant: true } } },
+      orderBy: { scheduledAt: 'desc' },
+    });
+  }
+
+  async createMyTestDrive(customerId: string, data: { leadId: string; scheduledAt: string }) {
+    const lead = await this.prisma.lead.findFirst({ where: { id: data.leadId, customerId } });
+    if (!lead) throw new NotFoundException('Lead not found.');
+    const testDrive = await this.prisma.testDrive.create({
+      data: { leadId: data.leadId, scheduledAt: new Date(data.scheduledAt) },
+    });
+    this.realtime.notifyLeadUpdated(data.leadId);
+    return testDrive;
+  }
+
+  async cancelMyTestDrive(customerId: string, id: string) {
+    const testDrive = await this.prisma.testDrive.findFirst({ where: { id, lead: { customerId } } });
+    if (!testDrive) throw new NotFoundException('Test drive not found.');
+    const updated = await this.prisma.testDrive.update({ where: { id }, data: { status: 'CANCELLED' } });
+    this.realtime.notifyLeadUpdated(testDrive.leadId);
+    return updated;
+  }
+
   async updateTestDrive(id: string, data: { scheduledAt?: string; status?: string; feedback?: string }, _changedBy?: string) {
     const testDrive = await this.prisma.testDrive.findUnique({ where: { id } });
     if (!testDrive) throw new NotFoundException('Test drive not found.');
