@@ -471,6 +471,7 @@ model Lead {
   // ---- Phase A: Customer Qualification + Lead Temperature ----
   temperature           String  @default("WARM") // HOT, WARM, COLD — staff-set, no auto-scoring
   purpose               String? // Family, Personal, Business, Other
+  enquiryType           String? // VEHICLE_ENQUIRY, FINANCE, INSURANCE, EXCHANGE, TEST_DRIVE, DEALER_ENQUIRY, USED_VEHICLE — which CTA the customer used, for CRM filtering/reporting (separate from purpose above)
   decisionMaker         String?
   currentCar            String?
   exchangeValue         Float?
