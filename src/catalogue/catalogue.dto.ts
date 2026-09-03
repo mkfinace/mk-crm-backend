@@ -26,7 +26,7 @@ export class CreateModelDto {
   @IsNotEmpty()
   name: string;
 
-  @ApiPropertyOptional({ example: 'CAR', description: 'CAR, TRUCK, TEMPO, PICKUP, TRACTOR, BUS, CONSTRUCTION' })
+  @ApiPropertyOptional({ example: 'CAR', description: 'CAR, MINI_TRUCK, PICKUP_TRUCK, LCV, MCV, HCV, TRUCK, TRACTOR, BUS, CONSTRUCTION (TEMPO, PICKUP kept for backward compatibility with older listings)' })
   @IsString()
   @IsOptional()
   category?: string;
