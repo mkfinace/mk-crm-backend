@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, Body, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -8,6 +8,16 @@ export class PortalController {
   constructor(private prisma: PrismaService) {}
 
   private customerId(req: any) { return req.user?.customerId || req.user?.customer?.id || req.user?.sub; }
+
+  @Get('my/leads')
+  async leads(@Req() req: any) {
+    const customerId = this.customerId(req);
+    return this.prisma.lead.findMany({
+      where: { customerId },
+      include: { brand: true, model: true, variant: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 
   @Get('my/bookings')
   async bookings(@Req() req: any) {
