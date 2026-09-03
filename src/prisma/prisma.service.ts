@@ -206,6 +206,7 @@ const MIGRATIONS: { name: string; sql: string }[] = [
   // ---- Staff password login brute-force protection ----
   { name: 'user_failed_login_attempts_field', sql: `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "failedLoginAttempts" INTEGER NOT NULL DEFAULT 0;` },
   { name: 'user_locked_until_field', sql: `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "lockedUntil" TIMESTAMP(3);` },
+  { name: 'lead_enquiry_type_field', sql: `ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "enquiryType" TEXT;` },
   // ---- RBAC: database-driven permissions ----
   {
     name: 'permission_table',
