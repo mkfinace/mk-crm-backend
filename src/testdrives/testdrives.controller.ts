@@ -12,6 +12,12 @@ import { RequirePermission } from '../permissions/permissions.decorator';
 export class TestDrivesController {
   constructor(private testDrivesService: TestDrivesService) {}
 
+  @RequirePermission('portal.access')
+  @Post('my')
+  createMyTestDrive(@Body() data: CreateTestDriveDto, @Req() req: any) {
+    return this.testDrivesService.createMyTestDrive(req.user.sub, data);
+  }
+
   @RequirePermission('test_drives.manage')
   @Post()
   createTestDrive(@Body() data: CreateTestDriveDto, @Req() req: any) {
