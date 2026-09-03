@@ -21,6 +21,23 @@ export class DeliveriesService {
     return delivery;
   }
 
+  async listMyDeliveries(customerId: string) {
+    return this.prisma.delivery.findMany({
+      where: { lead: { customerId } },
+      include: { lead: { include: { brand: true, model: true, variant: true, dealer: true, booking: true } } },
+      orderBy: { scheduledAt: 'desc' },
+    });
+  }
+
+  async getMyDelivery(customerId: string, id: string) {
+    const delivery = await this.prisma.delivery.findFirst({
+      where: { id, lead: { customerId } },
+      include: { lead: { include: { brand: true, model: true, variant: true, dealer: true, booking: true } } },
+    });
+    if (!delivery) throw new NotFoundException('Delivery not found.');
+    return delivery;
+  }
+
   listDeliveries(leadId?: string) {
     return this.prisma.delivery.findMany({
       where: leadId ? { leadId } : {},
