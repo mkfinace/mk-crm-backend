@@ -8,7 +8,7 @@ const DELIVERY_STATUSES = ['SCHEDULED', 'DELIVERED', 'DELAYED'];
 export class DeliveriesService {
   constructor(private prisma: PrismaService, private realtime: RealtimeGateway) {}
 
-  async createDelivery(data: { leadId: string; scheduledAt: string }) {
+  async createDelivery(data: { leadId: string; scheduledAt: string }, _changedBy?: string) {
     const lead = await this.prisma.lead.findUnique({ where: { id: data.leadId } });
     if (!lead) throw new NotFoundException('Lead not found.');
     const existing = await this.prisma.delivery.findUnique({ where: { leadId: data.leadId } });
@@ -28,7 +28,7 @@ export class DeliveriesService {
     });
   }
 
-  async updateDelivery(id: string, data: { scheduledAt?: string; status?: string; deliveredAt?: string }) {
+  async updateDelivery(id: string, data: { scheduledAt?: string; status?: string; deliveredAt?: string }, _changedBy?: string) {
     const delivery = await this.prisma.delivery.findUnique({ where: { id } });
     if (!delivery) throw new NotFoundException('Delivery not found.');
     if (data.status && !DELIVERY_STATUSES.includes(data.status)) {

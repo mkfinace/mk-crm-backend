@@ -72,7 +72,7 @@ export class DocumentsService {
     return updated;
   }
 
-  async deleteDocument(id: string) {
+  async deleteDocument(id: string, _changedBy?: string) {
     const doc = await this.prisma.document.findUnique({ where: { id } });
     if (!doc) throw new NotFoundException('Document not found.');
     const deleted = await this.prisma.document.delete({ where: { id } });
