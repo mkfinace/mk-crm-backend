@@ -838,6 +838,7 @@ model Message {
   body            String
   customerVisible Boolean  @default(false)
   createdAt       DateTime @default(now())
+  readAt          DateTime? // set when the recipient (or their team) has opened this message — drives the unread badge
 }
 
 model AuditLog {

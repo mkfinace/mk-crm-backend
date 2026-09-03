@@ -36,4 +36,11 @@ export class MessagesService {
       orderBy: { createdAt: 'asc' },
     });
   }
+
+  async markMessagesRead(leadId: string) {
+    return this.prisma.message.updateMany({
+      where: { leadId, readAt: null },
+      data: { readAt: new Date() },
+    });
+  }
 }

@@ -26,4 +26,9 @@ export class MessagesController {
   listMessages(@Query('leadId') leadId: string) {
     return this.messagesService.listMessages(leadId);
   }
+
+  @Post('read')
+  markMessagesRead(@Body() data: { leadId: string }) {
+    return this.messagesService.markMessagesRead(data.leadId);
+  }
 }
