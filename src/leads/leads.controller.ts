@@ -88,8 +88,9 @@ export class LeadsController {
     @Query('dealerExecutiveId') dealerExecutiveId?: string,
     @Query('financeExecutiveId') financeExecutiveId?: string,
     @Query('salesStatus') salesStatus?: string,
+    @Query('enquiryType') enquiryType?: string,
   ) {
-    return this.leadsService.listLeads({ dealerExecutiveId, financeExecutiveId, salesStatus });
+    return this.leadsService.listLeads({ dealerExecutiveId, financeExecutiveId, salesStatus, enquiryType });
   }
 
   @UseGuards(JwtAuthGuard, PermissionsGuard)

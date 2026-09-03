@@ -48,6 +48,7 @@ export class LeadsService {
     source?: string;
     temperature?: string;
     purpose?: string;
+    enquiryType?: string;
     decisionMaker?: string;
     currentCar?: string;
     exchangeValue?: number;
@@ -88,6 +89,7 @@ export class LeadsService {
         financeStatus: data.financeRequired ? 'PENDING' : 'NOT_REQUIRED',
         temperature: data.temperature || 'WARM',
         purpose: data.purpose,
+        enquiryType: data.enquiryType,
         decisionMaker: data.decisionMaker,
         currentCar: data.currentCar,
         exchangeValue: data.exchangeValue,
@@ -102,12 +104,13 @@ export class LeadsService {
     });
   }
 
-  listLeads(filters: { dealerExecutiveId?: string; financeExecutiveId?: string; salesStatus?: string }) {
+  listLeads(filters: { dealerExecutiveId?: string; financeExecutiveId?: string; salesStatus?: string; enquiryType?: string }) {
     return this.prisma.lead.findMany({
       where: {
         ...(filters.dealerExecutiveId ? { dealerExecutiveId: filters.dealerExecutiveId } : {}),
         ...(filters.financeExecutiveId ? { financeExecutiveId: filters.financeExecutiveId } : {}),
         ...(filters.salesStatus ? { salesStatus: filters.salesStatus } : {}),
+        ...(filters.enquiryType ? { enquiryType: filters.enquiryType } : {}),
       },
       include: { customer: true, brand: true, model: true, variant: true, dealer: true },
       orderBy: { createdAt: 'desc' },
@@ -146,6 +149,7 @@ export class LeadsService {
     source?: string;
     temperature?: string;
     purpose?: string;
+    enquiryType?: string;
     decisionMaker?: string;
     currentCar?: string;
     exchangeValue?: number;
@@ -182,6 +186,7 @@ export class LeadsService {
         source: data.source,
         temperature: data.temperature,
         purpose: data.purpose,
+        enquiryType: data.enquiryType,
         decisionMaker: data.decisionMaker,
         currentCar: data.currentCar,
         exchangeValue: data.exchangeValue,

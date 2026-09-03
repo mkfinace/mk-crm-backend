@@ -63,6 +63,11 @@ export class CreateLeadDto {
   @IsOptional()
   purpose?: string;
 
+  @ApiPropertyOptional({ example: 'FINANCE', description: 'VEHICLE_ENQUIRY, FINANCE, INSURANCE, EXCHANGE, TEST_DRIVE, DEALER_ENQUIRY, USED_VEHICLE — which CTA the customer used' })
+  @IsString()
+  @IsOptional()
+  enquiryType?: string;
+
   @ApiPropertyOptional({ example: 'Self' })
   @IsString()
   @IsOptional()
