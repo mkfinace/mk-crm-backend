@@ -93,6 +93,8 @@ model Model {
   // CAR, TRUCK, TEMPO, PICKUP, TRACTOR, BUS, CONSTRUCTION
   category String @default("CAR")
   status  String @default("ACTIVE")
+  metaTitle       String?
+  metaDescription String?
 
   variants Variant[]
   leads    Lead[]
