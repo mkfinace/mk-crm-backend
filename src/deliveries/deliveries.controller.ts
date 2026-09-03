@@ -12,6 +12,19 @@ import { RequirePermission } from '../permissions/permissions.decorator';
 export class DeliveriesController {
   constructor(private deliveriesService: DeliveriesService) {}
 
+  // Customer-safe routes: service verifies that the delivery belongs to req.user.sub.
+  @RequirePermission('portal.access')
+  @Get('my')
+  listMyDeliveries(@Req() req: any) {
+    return this.deliveriesService.listMyDeliveries(req.user.sub);
+  }
+
+  @RequirePermission('portal.access')
+  @Get('my/:id')
+  getMyDelivery(@Req() req: any, @Param('id') id: string) {
+    return this.deliveriesService.getMyDelivery(req.user.sub, id);
+  }
+
   @RequirePermission('deliveries.manage')
   @Post()
   createDelivery(@Body() data: CreateDeliveryDto, @Req() req: any) {
