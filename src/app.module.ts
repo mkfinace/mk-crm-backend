@@ -31,41 +31,10 @@ import { PricingModule } from './pricing/pricing.module';
 import { OffersModule } from './offers/offers.module';
 import { WarrantyModule } from './warranty/warranty.module';
 import { CarDataSubmissionsModule } from './car-data-submissions/car-data-submissions.module';
+import { PortalModule } from './portal/portal.module';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    PrismaModule,
-    RealtimeModule,
-    PermissionsModule,
-    AuthModule,
-    UsersModule,
-    CatalogueModule,
-    LeadsModule,
-    DealersModule,
-    BanksModule,
-    QuotationsModule,
-    TestDrivesModule,
-    DocumentsModule,
-    FinanceCasesModule,
-    BookingsModule,
-    DeliveriesModule,
-    NotificationsModule,
-    MessagesModule,
-    AuditLogsModule,
-    DynamicFieldsModule,
-    VehiclesModule,
-    FeaturesModule,
-    ColoursModule,
-    PricingModule,
-    OffersModule,
-    WarrantyModule,
-    CarDataSubmissionsModule,
-    SiteSettingsModule,
-    ReportsModule,
-    NegotiationsModule,
-    FinanceApplicationsModule,
-  ],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, RealtimeModule, PermissionsModule, AuthModule, UsersModule, CatalogueModule, LeadsModule, DealersModule, BanksModule, QuotationsModule, TestDrivesModule, DocumentsModule, FinanceCasesModule, BookingsModule, DeliveriesModule, NotificationsModule, MessagesModule, AuditLogsModule, DynamicFieldsModule, VehiclesModule, FeaturesModule, ColoursModule, PricingModule, OffersModule, WarrantyModule, CarDataSubmissionsModule, SiteSettingsModule, ReportsModule, NegotiationsModule, FinanceApplicationsModule, PortalModule],
   controllers: [AppController],
 })
 export class AppModule {}
