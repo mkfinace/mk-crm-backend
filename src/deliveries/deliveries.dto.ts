@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateDeliveryDto {
   @ApiProperty({ example: 'lead-id-here' })
@@ -38,4 +38,9 @@ export class UpdateDeliveryDto {
   @IsString()
   @IsOptional()
   insurancePolicyNumber?: string;
+
+  @ApiPropertyOptional({ example: ['data:image/jpeg;base64,...'], description: 'Delivery-day photos, shown to the customer on their portal delivery page' })
+  @IsArray()
+  @IsOptional()
+  photos?: string[];
 }

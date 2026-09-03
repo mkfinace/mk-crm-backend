@@ -814,6 +814,7 @@ model Delivery {
   status       String    @default("SCHEDULED") // SCHEDULED, DELIVERED, DELAYED
   registrationNumber    String? // RC number assigned to the actual physical unit delivered
   insurancePolicyNumber String?
+  photosJson   String? // JSON array of delivery-day photo URLs, shown on the customer portal delivery page
 }
 
 model Notification {

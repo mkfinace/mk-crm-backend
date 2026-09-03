@@ -348,6 +348,7 @@ const MIGRATIONS: { name: string; sql: string }[] = [
   { name: 'car_data_submission_status_index', sql: `CREATE INDEX IF NOT EXISTS "CarDataSubmission_status_idx" ON "CarDataSubmission"("status");` },
   { name: 'message_read_at_column', sql: `ALTER TABLE "Message" ADD COLUMN IF NOT EXISTS "readAt" TIMESTAMP(3);` },
   { name: 'delivery_registration_insurance_columns', sql: `ALTER TABLE "Delivery" ADD COLUMN IF NOT EXISTS "registrationNumber" TEXT, ADD COLUMN IF NOT EXISTS "insurancePolicyNumber" TEXT;` },
+  { name: 'delivery_photos_json_column', sql: `ALTER TABLE "Delivery" ADD COLUMN IF NOT EXISTS "photosJson" TEXT;` },
 ];
 
 @Injectable()
