@@ -12,6 +12,20 @@ import { RequirePermission } from '../permissions/permissions.decorator';
 export class QuotationsController {
   constructor(private quotationsService: QuotationsService) {}
 
+  // Customer Portal — read only, own quotations only.
+  // Registered before ':id' so it cannot be swallowed as an id.
+  @RequirePermission('portal.access')
+  @Get('my')
+  listMyQuotations(@Req() req: any, @Query('leadId') leadId?: string) {
+    return this.quotationsService.listMyQuotations(req.user.sub, leadId);
+  }
+
+  @RequirePermission('portal.access')
+  @Get('my/:id')
+  getMyQuotation(@Req() req: any, @Param('id') id: string) {
+    return this.quotationsService.getMyQuotation(req.user.sub, id);
+  }
+
   @RequirePermission('quotations.manage')
   @Post()
   createQuotation(@Body() data: CreateQuotationDto, @Req() req: any) {

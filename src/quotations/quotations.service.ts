@@ -31,7 +31,6 @@ export class QuotationsService {
     const lead = await this.prisma.lead.findUnique({ where: { id: data.leadId } });
     if (!lead) throw new NotFoundException('Lead not found.');
 
-    // Never overwrite a previous quotation — each save is a new version.
     const latest = await this.prisma.quotation.findFirst({ where: { leadId: data.leadId }, orderBy: { version: 'desc' } });
     const version = (latest?.version || 0) + 1;
 
@@ -69,6 +68,26 @@ export class QuotationsService {
       where: leadId ? { leadId } : {},
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  async listMyQuotations(customerId: string, leadId?: string) {
+    const leadWhere: any = { customerId };
+    if (leadId) leadWhere.id = leadId;
+    const leads = await this.prisma.lead.findMany({ where: leadWhere, select: { id: true } });
+    const leadIds = leads.map((l) => l.id);
+    if (leadIds.length === 0) return [];
+    return this.prisma.quotation.findMany({
+      where: { leadId: { in: leadIds } },
+      orderBy: [{ leadId: 'asc' }, { version: 'desc' }],
+    });
+  }
+
+  async getMyQuotation(customerId: string, id: string) {
+    const quotation = await this.prisma.quotation.findFirst({
+      where: { id, lead: { customerId } },
+    });
+    if (!quotation) throw new NotFoundException('Quotation not found.');
+    return quotation;
   }
 
   async deleteQuotation(id: string, _changedBy?: string) {
