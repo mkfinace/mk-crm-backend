@@ -5,9 +5,10 @@ import { FeaturesModule } from '../features/features.module';
 import { ColoursModule } from '../colours/colours.module';
 import { WarrantyModule } from '../warranty/warranty.module';
 import { DynamicFieldsModule } from '../dynamic-fields/dynamic-fields.module';
+import { AuditLogsModule } from '../auditlogs/auditlogs.module';
 
 @Module({
-  imports: [FeaturesModule, ColoursModule, WarrantyModule, DynamicFieldsModule],
+  imports: [FeaturesModule, ColoursModule, WarrantyModule, DynamicFieldsModule, AuditLogsModule],
   controllers: [CarDataSubmissionsController],
   providers: [CarDataSubmissionsService],
 })
