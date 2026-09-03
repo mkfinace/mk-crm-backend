@@ -18,6 +18,23 @@ export class BookingsService {
     return booking;
   }
 
+  async listMyBookings(customerId: string) {
+    return this.prisma.booking.findMany({
+      where: { lead: { customerId } },
+      include: { lead: { include: { brand: true, model: true, variant: true, dealer: true } } },
+      orderBy: { bookedAt: 'desc' },
+    });
+  }
+
+  async getMyBooking(customerId: string, id: string) {
+    const booking = await this.prisma.booking.findFirst({
+      where: { id, lead: { customerId } },
+      include: { lead: { include: { brand: true, model: true, variant: true, dealer: true, delivery: true } } },
+    });
+    if (!booking) throw new NotFoundException('Booking not found.');
+    return booking;
+  }
+
   listBookings(leadId?: string) {
     return this.prisma.booking.findMany({
       where: leadId ? { leadId } : {},
