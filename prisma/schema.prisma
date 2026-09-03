@@ -812,6 +812,8 @@ model Delivery {
   scheduledAt  DateTime
   deliveredAt  DateTime?
   status       String    @default("SCHEDULED") // SCHEDULED, DELIVERED, DELAYED
+  registrationNumber    String? // RC number assigned to the actual physical unit delivered
+  insurancePolicyNumber String?
 }
 
 model Notification {

@@ -28,7 +28,7 @@ export class DeliveriesService {
     });
   }
 
-  async updateDelivery(id: string, data: { scheduledAt?: string; status?: string; deliveredAt?: string }, _changedBy?: string) {
+  async updateDelivery(id: string, data: { scheduledAt?: string; status?: string; deliveredAt?: string; registrationNumber?: string; insurancePolicyNumber?: string }, _changedBy?: string) {
     const delivery = await this.prisma.delivery.findUnique({ where: { id } });
     if (!delivery) throw new NotFoundException('Delivery not found.');
     if (data.status && !DELIVERY_STATUSES.includes(data.status)) {
@@ -41,6 +41,8 @@ export class DeliveriesService {
         scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : undefined,
         status: data.status,
         deliveredAt: data.deliveredAt ? new Date(data.deliveredAt) : undefined,
+        registrationNumber: data.registrationNumber,
+        insurancePolicyNumber: data.insurancePolicyNumber,
       },
     });
 

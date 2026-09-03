@@ -28,4 +28,14 @@ export class UpdateDeliveryDto {
   @IsString()
   @IsOptional()
   deliveredAt?: string;
+
+  @ApiPropertyOptional({ example: 'GJ01AB1234', description: 'RC number assigned to the actual physical unit delivered' })
+  @IsString()
+  @IsOptional()
+  registrationNumber?: string;
+
+  @ApiPropertyOptional({ example: 'POL123456789' })
+  @IsString()
+  @IsOptional()
+  insurancePolicyNumber?: string;
 }
