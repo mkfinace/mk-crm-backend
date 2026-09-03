@@ -8,37 +8,36 @@ import { RequirePermission } from '../permissions/permissions.decorator';
 
 @ApiTags('documents')
 @Controller('documents')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class DocumentsController {
   constructor(private documentsService: DocumentsService) {}
 
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermission('documents.manage')
   @Post()
-  createDocument(@Body() data: CreateDocumentDto) {
-    return this.documentsService.createDocument(data);
-  }
+  createDocument(@Body() data: CreateDocumentDto) { return this.documentsService.createDocument(data); }
 
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermission('documents.view')
   @Get()
-  listDocuments(@Query('leadId') leadId?: string) {
-    return this.documentsService.listDocuments(leadId);
-  }
+  listDocuments(@Query('leadId') leadId?: string) { return this.documentsService.listDocuments(leadId); }
 
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermission('portal.access')
+  @Get('my')
+  listMyDocuments(@Req() req: any, @Query('leadId') leadId?: string) { return this.documentsService.listMyDocuments(req.user.sub, leadId); }
+
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermission('documents.manage')
   @Put(':id/verify')
-  verifyDocument(@Param('id') id: string, @Body() data: VerifyDocumentDto) {
-    return this.documentsService.verifyDocument(id, data.status, data.verifiedBy, data.rejectionReason);
-  }
+  verifyDocument(@Param('id') id: string, @Body() data: VerifyDocumentDto) { return this.documentsService.verifyDocument(id, data.status, data.verifiedBy, data.rejectionReason); }
 
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermission('documents.manage')
   @Put(':id/reupload')
-  reuploadDocument(@Param('id') id: string, @Body() data: ReuploadDocumentDto) {
-    return this.documentsService.reuploadDocument(id, data.fileUrl, data.uploadedBy);
-  }
+  reuploadDocument(@Param('id') id: string, @Body() data: ReuploadDocumentDto) { return this.documentsService.reuploadDocument(id, data.fileUrl, data.uploadedBy); }
 
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermission('documents.manage')
   @Delete(':id')
-  deleteDocument(@Param('id') id: string, @Req() req: any) {
-    return this.documentsService.deleteDocument(id, req.user.sub);
-  }
+  deleteDocument(@Param('id') id: string, @Req() req: any) { return this.documentsService.deleteDocument(id, req.user.sub); }
 }
